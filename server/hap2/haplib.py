@@ -57,12 +57,12 @@ class MonitoringServerInfo:
 
 class ArmInfo:
     def __init__(self):
-        self.last_status
-        self.failure_reason
-        self.last_success_time
-        self.last_failure_time
-        self.num_success
-        self.num_failure
+        self.last_status = str()
+        self.failure_reason = str()
+        self.last_success_time = str()
+        self.last_failure_time = str()
+        self.num_success = int()
+        self.num_failure = int()
 
 
 class RabbitMQConnector:

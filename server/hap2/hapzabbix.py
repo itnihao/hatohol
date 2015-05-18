@@ -82,6 +82,7 @@ class HAPZabbixRabbitMQPublisher(haplib.RabbitMQPublisher):
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
         self.event_last_info = None
+	self.arminfo = haplib.ArmInfo()
 
 
     def get_monitoring_server_info(self):
