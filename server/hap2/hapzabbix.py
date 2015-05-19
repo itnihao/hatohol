@@ -82,14 +82,14 @@ class HAPZabbixRabbitMQPublisher(haplib.RabbitMQPublisher):
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
         self.event_last_info = None
-	self.arminfo = haplib.ArmInfo()
+        self.arminfo = haplib.ArmInfo()
 
 
     def get_monitoring_server_info(self):
         params = ""
         request_id = get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("getMonitoringServerInfo", params, request_id)
-        self.get_response_and_check_id(request_id)
+        return self.get_response_and_check_id(request_id)
 
 
     def get_last_info(self, element):
@@ -97,7 +97,7 @@ class HAPZabbixRabbitMQPublisher(haplib.RabbitMQPublisher):
         request_id = get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("getLastInfo", params, request_id)
 
-        self.get_response_and_check_id(request_id)
+        return self.get_response_and_check_id(request_id)
 
 
     def exchange_profile(self, procedures, response_id=None):
