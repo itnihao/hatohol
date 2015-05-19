@@ -118,23 +118,23 @@ class RabbitMQConsumer(RabbitMQConnector):
         self.channel.start_consuming()
 
 
-	def check_json(self, json_string):
-		json_dict = convert_string_to_dict(json_string)
-	    if not isinstance(json_dict, dict):
-	        send_json_to_que(create_error_json(json_dict))
-	        return
-	
-	    result = check_implement_method(json_dict["method"])
-	    if result is not None:
-	        send_json_to_que(create_error_json(result, json_dict["id"]))
-	        return
-	
-	    result = check_argument_is_correct(json_dict["method"])
-	    if result is not None:
-	        send_json_to_que(create_error_json(result, json_dict["id"]))
-	        return
-	
-	    return json_dict
+    def check_json(self, json_string):
+        json_dict = convert_string_to_dict(json_string)
+        if not isinstance(json_dict, dict):
+            send_json_to_que(create_error_json(json_dict))
+            return
+
+        result = check_implement_method(json_dict["method"])
+        if result is not None:
+            send_json_to_que(create_error_json(result, json_dict["id"]))
+            return
+
+        result = check_argument_is_correct(json_dict["method"])
+        if result is not None:
+            send_json_to_que(create_error_json(result, json_dict["id"]))
+            return
+
+        return json_dict
 
 
 def get_error_dict():
