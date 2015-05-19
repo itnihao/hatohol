@@ -218,8 +218,17 @@ class HAPZabbixRabbitMQPublisher(haplib.RabbitMQPublisher):
         self.event_last_info = last_info
 
 
-    def update_arm_info(self):
-        print "Not implement"
+    def update_arm_info(self, arm_info):
+        params = {"lastStatus": arm_info.last_status,
+                  "failureReason": arm_info.failure_reason,
+                  "lastSuccessTime": arm_info.last_success_time,
+                  "lastFailureTime": arm_info.last_failure_time,
+                  "numSuccess": arm_info.num_success,
+                  "numFailure": arm_info.num_failure}
+
+        request_id = haplib.get_and_save_request_id(self.requested_ids)
+        self.send_request_to_queue("updateArmInfo", params, request_id)
+        self.get_response_and_check_id(request_id)
 
 
     def get_response_and_check_id(request_id):
@@ -260,13 +269,25 @@ class HAPZabbixDaemon:
     def poll(publisher_queue):
         publisher = HAPZabbixRabbitMQPublisher(self.host, self.port, "p_"+self.queue_name,
                                                self.user_name, self.user_password, publisher_queue)
+        arm_info = haplib.ArmInfo()
+
         while True:
             sleep_time = publisher.ms_info.interval_sec
             try:
                 publisher.routine_update()
+                arm_info.last_status = "OK"
+                arm_info.failure_reason = ""
+                arm_info.last_success_time = haplib.get_hatohol_current_time()
+                arm_info.num_success += 1
             except:
                 sleep_time = publisher.ms_info.retry_interval_sec
+                arm_info.last_status = "NG"
+                #ToDo Think about how to input failure_reason
+                # arm_info.failure_reason = ""
+                arm_info.failure_time = haplib.get_hatohol_current_time()
+                arm_info.num_failure += 1
 
+            publisher.update_arm_info(arm_info)
             time.sleep(sleep_time)
 
 
