@@ -5,6 +5,7 @@ import daemon
 import json
 import multiprocessing
 import argparse
+import time
 
 import haplib
 import zabbixapi
@@ -253,9 +254,20 @@ class HAPZabbixDaemon:
         subprocess.daemon = True
         subprocess.start()
 
-        publisher = HAPZabbixRabbitMQPublisher(self.host, self.port, "p_" + self.queue_name,
-                                               self.user_name, self.user_password, queue)
-        publisher.routine_update()
+        poll(publisher_queue)
+
+
+    def poll(publisher_queue):
+        publisher = HAPZabbixRabbitMQPublisher(self.host, self.port, "p_"+self.queue_name,
+                                               self.user_name, self.user_password, publisher_queue)
+        while True:
+            sleep_time = publisher.ms_info.interval_sec
+            try:
+                publisher.routine_update()
+            except:
+                sleep_time = publisher.ms_info.retry_interval_sec
+
+            time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
