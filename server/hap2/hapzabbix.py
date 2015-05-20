@@ -45,11 +45,11 @@ class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures
                                                     "p_" + queue_name,
                                                     user_name, user_password,
                                                     queue)
-        self.procedures = {"exchangeProfile": self.exchangeProfile,
-                                     "fetchItems": self.fetchItems,
-                                     "fetchHistory": self.fetchHistory,
-                                     "fetchTriggers": self.fetchTriggers,
-                                     "fetchEvents": self.fetchEvents}
+        self.procedures = {"exchangeProfile": self.hap_exchange_profile,
+                           "fetchItems": self.hap_fetch_items,
+                           "fetchHistory": self.hap_fetch_history,
+                           "fetchTriggers": self.hap_fetch_triggers,
+                           "fetchEvents": self.hap_fetch_events}
 
     # basic_consume call the following function with arguments.
     # But I don't use other than body.
@@ -68,29 +68,29 @@ class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures
                 publisher_queue.put(valid_json_dict)
 
 
-    def exchangeProfile(self, params, request_id):
+    def hap_exchange_profile(self, params, request_id):
         haplib.optimize_server_procedures(SERVER_PROCEDURES, params)
         my_procedures = haplib.get_implement_procedures(HapZabbixProcedures)
         self.exchange_profile(my_procedures, request_id)
 
 
-    def fetchItems(self, params, request_id):
+    def hap_fetch_items(self, params, request_id):
         self.send_response_to_queue("SUCCESS", request_id)
         self.publisher.put_items(params["hostId"], params["fetchId"])
 
 
-    def fetchHistory(self, params, request_id):
+    def hap_fetch_history(self, params, request_id):
         self.send_response_to_queue("SUCCESS", request_id)
         self.publisher.put_history(params["itemId"], params["fetchId"])
 
 
-    def fetchTriggers(self, params, request_id):
+    def hap_fetch_triggers(self, params, request_id):
         self.send_response_to_queue("SUCCESS", request_id)
         self.publisher.update_triggers(params["lastChangeTime"], params["hostId"],
                                  params["fetchId"])
 
 
-    def fetchEvents(self, params, request_id):
+    def hap_fetch_events(self, params, request_id):
         self.send_response_to_queue("SUCCESS", request_id)
         self.publisher.update_events(params["lastInfo"], params["count"],
                                  params["direction"], params["fetchId"])
