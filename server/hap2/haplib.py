@@ -21,6 +21,7 @@
 
 import json
 from datetime import datetime
+import time
 import pika
 import multiprocessing
 import random
@@ -238,3 +239,7 @@ def find_last_info_from_dict_array(target_array, last_info_name):
                 last_info == target_dict[last_info_name]
 
     return last_info
+
+def get_current_hatohol_time():
+	unix_time = float(time.mktime(datetime.now().utctimetuple()))
+	return translate_unix_time_to_hatohol_time(unix_time)

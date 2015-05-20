@@ -310,14 +310,14 @@ class HAPZabbixDaemon:
                 publisher.routine_update()
                 arm_info.last_status = "OK"
                 arm_info.failure_reason = ""
-                arm_info.last_success_time = haplib.get_hatohol_current_time()
+                arm_info.last_success_time = haplib.get_current_hatohol_time()
                 arm_info.num_success += 1
             except:
                 sleep_time = publisher.ms_info.retry_interval_sec
                 arm_info.last_status = "NG"
                 #ToDo Think about how to input failure_reason
                 # arm_info.failure_reason = ""
-                arm_info.failure_time = haplib.get_hatohol_current_time()
+                arm_info.failure_time = haplib.get_current_hatohol_time()
                 arm_info.num_failure += 1
 
             publisher.update_arm_info(arm_info)
