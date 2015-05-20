@@ -93,26 +93,27 @@ class RabbitMQConnector:
         self.channel.queue_declare(queue=queue_name)
 
 
-class RabbitMQPublisher(RabbitMQConnector):
+class RabbitMQPublisher():
     def __init__(self, host, port, queue_name, user_name, user_password):
-        RabbitMQConnector.__init__(self, host, port, queue_name, user_name, user_password)
+        self.connecter = RabbitMQConnector(host, port, queue_name,
+                                           user_name, user_password)
         self.requested_ids = set()
 
 
-    def send_request_to_queue(procedure_name, params, request_id):
+    def send_request_to_queue(self, procedure_name, params, request_id):
         request = json.dumps({"jsonrpc": "2.0", "method": procedure_name,
                               "params": params, "id": request_id})
-        self.channel.basic_publish(exchange="",
-                                   routing_key=self.queue_name,
-                                   body=request)
+        self.connector.channel.basic_publish(exchange="",
+                                             routing_key=self.queue_name,
+                                             body=request)
 
 
-    def send_response_to_queue(result, response_id):
+    def send_response_to_queue(self, result, response_id):
         response = json.dumps({"jsonrpc": "2.0", "result": result,
                                "id": request_id})
-        self.channel.basic_publish(exchange="",
-                                   routing_key=self.queue_name,
-                                   body=response)
+        self.connector.channel.basic_publish(exchange="",
+                                             routing_key=self.queue_name,
+                                             body=response)
 
 
 class RabbitMQConsumer(RabbitMQConnector):
