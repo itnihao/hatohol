@@ -48,16 +48,21 @@ class TestRabbitMQConnector(unittest.TestCase):
             pass
 
     def test_run_receive_loop(self):
-        def receiver(channel, msg):
-            channel.stop_consuming()
+        class Receiver():
+            def __call__(self, channel, msg):
+                self.msg = msg
+                channel.stop_consuming()
 
         TEST_BODY = "FOO"
         conn = RabbitMQConnector()
+        receiver = Receiver()
         conn.set_receiver(receiver)
         conn.connect(self._broker, self._port, self._vhost, self._queue_name,
                      self._user_name, self._password)
+        # TODO: ensure that the queue is empty
         self._publish(TEST_BODY)
         conn.run_receive_loop()
+        self.assertEquals(receiver.msg, TEST_BODY)
 
     def _build_broker_url(self):
         return "amqp://%s:%s@%s/%s" % (self._user_name, self._password,
