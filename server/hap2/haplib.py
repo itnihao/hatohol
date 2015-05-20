@@ -124,7 +124,7 @@ class RabbitMQConsumer(RabbitMQConnector):
         self.procedures_instance_name = "self.plugin_procedures"
 
 
-    def callback_handler(ch, method, properties, body):
+    def callback_handler(self, ch, method, properties, body):
         valid_json_dict = self.check_json(body)
         if valid_json_dict is None:
             return
