@@ -29,7 +29,7 @@ class TestRabbitMQConnector(unittest.TestCase):
     def setUpClass(cls):
         cls._broker = "localhost"
         cls._port = None
-        cls._vhost = "/test"
+        cls._vhost = "test"
         cls._queue_name = "test_queue"
         cls._user_name  = "test_user"
         cls._password   = "test_password"
