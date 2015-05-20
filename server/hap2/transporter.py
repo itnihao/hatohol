@@ -44,3 +44,13 @@ class Transporter:
         @param rpc      An ID of the call.
         """
         logging.debug("Called stub method: reply().");
+
+class Factory:
+    @classmethod
+    def create(cls, transporter_class):
+        """
+        Create a transporter object.
+        @param name A name of the transporter.
+        @return A created transporter object.
+        """
+        return transporter_class()
