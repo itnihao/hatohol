@@ -28,20 +28,17 @@ class Transporter:
     def __init__(self):
         self._receiver = None
 
-    def call(self, procedure, params, rpcid):
+    def call(self, msg):
         """
         Call a RPC.
-        @param procedure  A name of the procedure.
-        @param params     An object used as 'params'.
-        @param rpcid      An ID of the call.
+        @param mas A message to be sent.
         """
         logging.debug("Called stub method: call().");
 
-    def reply(self, result, rpcid):
+    def reply(self, msg):
         """
         Replay a message to a caller.
-        @param result   An object used as 'result'.
-        @param rpc      An ID of the call.
+        @param msg A reply message.
         """
         logging.debug("Called stub method: reply().");
 
