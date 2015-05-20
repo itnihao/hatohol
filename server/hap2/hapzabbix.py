@@ -30,7 +30,7 @@ class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures
 
     # basic_consume insert the following arguments to callback function.
     # But I don't use other than body.
-    def callback_handler(ch, method, properties, body):
+    def callback_handler(self, ch, method, properties, body):
         valid_json_dict = check_request(body)
         if valid_json_dict is None:
             return
