@@ -45,6 +45,11 @@ class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures
                                                     "p_" + queue_name,
                                                     user_name, user_password,
                                                     queue)
+        self.procedures = {"exchangeProfile": self.exchangeProfile,
+                                     "fetchItems": self.fetchItems,
+                                     "fetchHistory": self.fetchHistory,
+                                     "fetchTriggers": self.fetchTriggers,
+                                     "fetchEvents": self.fetchEvents}
 
     # basic_consume call the following function with arguments.
     # But I don't use other than body.
@@ -54,8 +59,8 @@ class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures
             return
 
         try:
-            eval("self." + valid_json_dict["method"])(valid_json_dict["params"],
-                                                      valid_json_dict["id"])
+            self.procedures[valid_json_dict["method"]](valid_json_dict["params"],
+                                                       valid_json_dict["id"])
         except KeyError:
             if valid_json_dict["id"] in self.requested_ids:
                 consumer_queue.put(valid_json_dict)
