@@ -21,6 +21,10 @@ import unittest
 from rabbitmqconnector import RabbitMQConnector
 
 class TestRabbitMQConnector(unittest.TestCase):
+    """
+    Before executing this test, some setting for RabbitMQ is needed.
+    See README in the same directory.
+    """
     @classmethod
     def setUpClass(cls):
         cls._broker = "localhost"
