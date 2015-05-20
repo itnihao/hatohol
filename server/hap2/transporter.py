@@ -26,7 +26,7 @@ class Transporter:
     """
 
     def __init__(self):
-        self._receivers = {}
+        self._receiver = None
 
     def call(self, procedure, params, rpcid):
         """
@@ -45,17 +45,20 @@ class Transporter:
         """
         logging.debug("Called stub method: reply().");
 
-    def add_receiver(self, rpc_name, receiver):
+    def set_receiver(self, receiver):
         """
         Register a receiver method.
-        @rpc_name An RPC name associated with the receiver.
         @receiver A receiver method.
         """
-        receiver_list = self._receivers.get(rpc_name)
-        if receiver_list is None:
-            receiver_list = []
-            self._receivers[rpc_name] = receiver_list
-        receiver_list.append(receiver)
+        self._receiver = receiver
+
+    def get_receiver(self):
+        """
+        @return
+        The registerd receiver method.
+        If no receiver is registered, None is returned.
+        """
+        return self._receiver
 
     def run_receive_loop(self):
         """
