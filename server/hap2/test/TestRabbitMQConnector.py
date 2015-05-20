@@ -18,6 +18,7 @@
   <http://www.gnu.org/licenses/>.
 """
 import unittest
+import subprocess
 from rabbitmqconnector import RabbitMQConnector
 
 class TestRabbitMQConnector(unittest.TestCase):
@@ -39,4 +40,30 @@ class TestRabbitMQConnector(unittest.TestCase):
         conn.connect(self._broker, self._port, self._vhost, self._queue_name,
                      self._user_name, self._password)
 
+    def test_run_receive_loop_without_connect(self):
+        conn = RabbitMQConnector()
+        try:
+            conn.run_receive_loop()
+        except AssertionError:
+            pass
 
+    def test_run_receive_loop(self):
+        def receiver(channel, msg):
+            channel.stop_consuming()
+
+        TEST_BODY = "FOO"
+        conn = RabbitMQConnector()
+        conn.set_receiver(receiver)
+        conn.connect(self._broker, self._port, self._vhost, self._queue_name,
+                     self._user_name, self._password)
+        self._publish(TEST_BODY)
+        conn.run_receive_loop()
+
+    def _build_broker_url(self):
+        return "amqp://%s:%s@%s/%s" % (self._user_name, self._password,
+                                       self._broker, self._vhost)
+
+    def _publish(self, body):
+        args = ["amqp-publish", "-u", self._build_broker_url(),
+                "-r", self._queue_name, "-b", body]
+        subprocess.Popen(args).communicate()

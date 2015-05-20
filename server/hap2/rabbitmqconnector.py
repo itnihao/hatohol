@@ -24,6 +24,9 @@ from transporter import Transporter
 
 class RabbitMQConnector(Transporter):
 
+    def __init__(self):
+        self._channel = None
+
     def connect(self, broker, port, vhost, queue_name, user_name, password):
         """
         @param broker     A broker address.
@@ -44,4 +47,17 @@ class RabbitMQConnector(Transporter):
         self._channel = connection.channel()
         self._channel.queue_declare(queue=queue_name)
 
+    def run_receive_loop(self):
+        assert self._channel != None
+
+        self._channel.basic_consume(self._consume_handler,
+                                    queue=self._queue_name, no_ack=True)
+        self._channel.start_consuming()
+
+    def _consume_handler(self, ch, method, properties, body):
+        receiver = self.get_receiver()
+        if receiver is None:
+            logging.warning("Receiver is not registered.")
+            return
+        receiver(self._channel, body)
 
