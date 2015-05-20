@@ -118,7 +118,8 @@ class RabbitMQPublisher():
 
 class RabbitMQConsumer(RabbitMQConnector):
     def __init__(self, host, port, queue_name, user_name, user_password):
-        RabbitMQConnector.__init__(self, host, port, queue_name, user_name, user_password)
+        self.connector = RabbitMQConnector(host, port, queue_name,
+                                           user_name, user_password)
         self.plugin_procedures = PluginProcedures()
         self.procedures_instance_name = "self.plugin_procedures"
 
@@ -132,9 +133,10 @@ class RabbitMQConsumer(RabbitMQConnector):
 
 
     def start_receiving(self):
-        self.channel.basic_consume(self.callback_handler,
-                                   queue=self.queue_name, no_ack=True)
-        self.channel.start_consuming()
+        self.connector.channel.basic_consume(self.callback_handler,
+                                             queue=self.queue_name,
+                                             no_ack=True)
+        self.connector.channel.start_consuming()
 
 
     def check_json(self, json_string):
