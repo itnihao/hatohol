@@ -255,20 +255,30 @@ class HAPZabbixDaemon:
 
 
     def start(self):
-        publisher_queue = multioprocessing.Queue()
-        consumer_queue = multioprocessing.Queue()
-        consumer = HAPZabbixRabbitMQConsumer(self.host, self.port, self.queue_name,
-                                             self.user_name, self.user_password, queue)
-        subprocess = multiprocessing.Process(target = consumer.start_receiving)
+        publisher_queue = multiprocessing.Queue()
+        consumer_queue = multiprocessing.Queue()
+        consumer = HAPZabbixRabbitMQConsumer(self.host,
+                                             self.port,
+                                             self.queue_name,
+                                             self.user_name,
+                                             self.user_password,
+                                             consumer_queue,
+                                             publisher_queue)
+
+        subprocess = multiprocessing.Process(target=poll, args=publisher_queue)
         subprocess.daemon = True
         subprocess.start()
 
-        poll(publisher_queue)
+        consumer.start_receiving()
 
 
-    def poll(publisher_queue):
-        publisher = HAPZabbixRabbitMQPublisher(self.host, self.port, "p_"+self.queue_name,
-                                               self.user_name, self.user_password, publisher_queue)
+    def poll(self, publisher_queue):
+        publisher = HAPZabbixRabbitMQPublisher(self.host,
+                                               self.port,
+                                               "p_"+self.queue_name,
+                                               self.user_name,
+                                               self.user_password,
+                                               publisher_queue)
         arm_info = haplib.ArmInfo()
 
         while True:
