@@ -27,3 +27,22 @@ class TestTransporter(unittest.TestCase):
       obj = transporter.Factory.create(Transporter)
       self.assertEquals(obj.__class__.__name__, "Transporter")
 
+    def test_add_receiver(self):
+      def receiver():
+          pass
+
+      def receiver2():
+          pass
+
+      tx = transporter.Factory.create(Transporter)
+      rpc_name = "rpc_name"
+      self.assertIsNone(tx._receivers.get(rpc_name))
+
+      tx.add_receiver(rpc_name, receiver)
+      receiver_list = tx._receivers.get(rpc_name)
+      self.assertEquals(receiver_list, [receiver])
+
+      # add receiver
+      tx.add_receiver(rpc_name, receiver2)
+      receiver_list = tx._receivers.get(rpc_name)
+      self.assertEquals(receiver_list, [receiver, receiver2])
