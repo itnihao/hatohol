@@ -27,7 +27,6 @@ class Transporter:
 
     def __init__(self):
         self._receivers = {}
-        pass
 
     def call(self, procedure, params, rpcid):
         """
