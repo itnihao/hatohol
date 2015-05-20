@@ -283,7 +283,7 @@ class HAPZabbixDaemon:
                                              consumer_queue,
                                              publisher_queue)
 
-        subprocess = multiprocessing.Process(target=poll, args=publisher_queue)
+        subprocess = multiprocessing.Process(target=poll, args=(publisher_queue,))
         subprocess.daemon = True
         subprocess.start()
 
