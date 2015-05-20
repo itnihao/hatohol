@@ -42,10 +42,7 @@ class TestRabbitMQConnector(unittest.TestCase):
 
     def test_run_receive_loop_without_connect(self):
         conn = RabbitMQConnector()
-        try:
-            conn.run_receive_loop()
-        except AssertionError:
-            pass
+        self.assertRaises(AssertionError, conn.run_receive_loop)
 
     def test_run_receive_loop(self):
         class Receiver():
