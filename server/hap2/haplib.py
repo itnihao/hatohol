@@ -100,6 +100,7 @@ class HAPBaseSender:
                  user_password, sender_queue):
         self.connector = Factory(RabbitMQConnector)
         self.connector.connect(broaker=host, port=port, vhost=vhost,
+        self.connector = Factory.create(RabbitMQConnector)
                                queue_name=queue_name, user_name=user_name,
                                user_password=user_password)
         self.requested_ids = set()
