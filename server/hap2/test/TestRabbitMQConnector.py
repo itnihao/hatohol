@@ -51,12 +51,12 @@ class TestRabbitMQConnector(unittest.TestCase):
                 channel.stop_consuming()
 
         TEST_BODY = "FOO"
+        self._delete_test_queue()
         conn = RabbitMQConnector()
         receiver = Receiver()
         conn.set_receiver(receiver)
         conn.connect(self._broker, self._port, self._vhost, self._queue_name,
                      self._user_name, self._password)
-        # TODO: ensure that the queue is empty
         self._publish(TEST_BODY)
         conn.run_receive_loop()
         self.assertEquals(receiver.msg, TEST_BODY)
@@ -68,4 +68,9 @@ class TestRabbitMQConnector(unittest.TestCase):
     def _publish(self, body):
         args = ["amqp-publish", "-u", self._build_broker_url(),
                 "-r", self._queue_name, "-b", body]
+        subprocess.Popen(args).communicate()
+
+    def _delete_test_queue(self):
+        args = ["amqp-delete-queue", "-u", self._build_broker_url(),
+                "-q", self._queue_name]
         subprocess.Popen(args).communicate()
