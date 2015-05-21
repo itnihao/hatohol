@@ -214,13 +214,6 @@ class HAPBaseMainPlugin():
                 self.sender_queue.put(valid_request)
 
 
-    def start_receiving(self):
-        self.connector.channel.basic_consume(self.callback_handler,
-                                             queue=self.queue_name,
-                                             no_ack=True)
-        self.connector.channel.start_consuming()
-
-
     def check_request(self, request_str):
         request_dict = convert_string_to_dict(request_str)
         if not isinstance(request_dict, dict):
