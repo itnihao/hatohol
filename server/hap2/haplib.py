@@ -26,6 +26,9 @@ import pika
 import multiprocessing
 import random
 
+from transporter import Factory
+from rabbitmqconnenctor import RabbitMQConnector
+
 SERVER_PROCEDURES = {"exchangeProfile": True,
                      "getMonitoringServerInfo": True,
                      "getLastInfo": True,
