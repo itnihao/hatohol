@@ -275,6 +275,11 @@ if __name__ == '__main__':
                         type=str,
                         default="localhost",
                         help="RabbitMQ host")
+    parser.add_argument("--vhost",
+                        dest="vhost",
+                        type=str,
+                        default=None,
+                        help="RabbitMQ vhost")
     parser.add_argument("--port",
                         dest="rabbitmq_port",
                         type=int,
