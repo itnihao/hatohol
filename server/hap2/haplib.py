@@ -75,7 +75,7 @@ class ArmInfo:
         self.num_failure = int()
 
 
-class HAPBaseHandlerProcedures():
+class HAPBaseProcedures():
     def hap_exchange_profile(self, params, request_id):
         pass
 
@@ -186,7 +186,7 @@ class HAPBaseReceiver():
                                            user_name, user_password)
         self.receiver_queue = receiver_queue
         self.sender_queue = sender_queue
-        self.procedures = HAPBaseHandlerProcedures()
+        self.procedures = HAPBaseProcedures()
         self.procedures_dict = {"exchangeProfile": procedures.hap_exchange_profile,
                            "fetchItems": procedures.hap_fetch_items,
                            "fetchHistory": procedures.hap_fetch_history,
