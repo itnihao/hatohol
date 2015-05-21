@@ -125,20 +125,20 @@ class HAPBaseSender:
 
     def get_monitoring_server_info(self):
         params = ""
-        request_id = get_and_save_request_id(self.requested_ids)
+        request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("getMonitoringServerInfo", params, request_id)
         return self.get_response_and_check_id(request_id)
 
     def get_last_info(self, element):
         params = element
-        request_id = get_and_save_request_id(self.requested_ids)
+        request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("getLastInfo", params, request_id)
 
         return self.get_response_and_check_id(request_id)
 
     def exchange_profile(self, procedures, response_id=None):
         if response_id is None:
-            request_id = get_and_save_request_id(self.requested_ids)
+            request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
             self.send_request_to_queue("exchangeProfile", procedures, request_id)
             self.get_response_and_check_id(request_id)
         else:
@@ -152,7 +152,7 @@ class HAPBaseSender:
                   "numSuccess": arm_info.num_success,
                   "numFailure": arm_info.num_failure}
 
-        request_id = haplib.get_and_save_request_id(self.requested_ids)
+        request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("updateArmInfo", params, request_id)
         self.get_response_and_check_id(request_id)
 
@@ -200,7 +200,7 @@ class HAPBaseMainPlugin:
                 self.sender_queue.put(valid_request)
 
     def check_request(self, request_str):
-        request_dict = convert_string_to_dict(request_str)
+        request_dict = HAPUtils.convert_string_to_dict(request_str)
         if not isinstance(request_dict, dict):
             self.sender.send_json_to_que(create_error_json(request_dict))
             return
@@ -210,7 +210,7 @@ class HAPBaseMainPlugin:
             send_json_to_que(create_error_json(result, request_dict["id"]))
             return
 
-        result = check_argument_is_correct(request_dict["method"])
+        result = HAPUtils.check_argument_is_correct(request_dict["method"])
         if result is not None:
             send_json_to_que(create_error_json(result, request_dict["id"]))
             return
