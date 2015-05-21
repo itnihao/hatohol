@@ -103,9 +103,9 @@ class HAPBaseSender:
                                queue_name=queue_name, user_name=user_name,
                                password=user_password)
         self.requested_ids = set()
-        self.arminfo = haplib.ArmInfo()
+        self.arminfo = ArmInfo()
         ms_dict = self.get_monitoring_server_info()
-        self.ms_info = haplib.MonitoringServerInfo(ms_dict)
+        self.ms_info = MonitoringServerInfo(ms_dict)
 
     def send_request_to_queue(self, procedure_name, params, request_id):
         request = json.dumps({"jsonrpc": "2.0", "method": procedure_name,
