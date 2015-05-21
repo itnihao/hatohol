@@ -27,7 +27,7 @@ import multiprocessing
 import random
 
 from transporter import Factory
-from rabbitmqconnenctor import RabbitMQConnector
+from rabbitmqconnector import RabbitMQConnector
 
 SERVER_PROCEDURES = {"exchangeProfile": True,
                      "getMonitoringServerInfo": True,
