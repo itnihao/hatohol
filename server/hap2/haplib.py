@@ -184,9 +184,12 @@ class HAPBaseSender:
 
 
 class HAPBaseMainPlugin():
-    def __init__(self, host, port, queue_name, user_name, user_password, main_queue, sender_queue):
-        self.connector = RabbitMQConnector(host, port, queue_name,
-                                           user_name, user_password)
+    def __init__(self, host, port, vhost, queue_name, user_name, user_password, main_queue, sender_queue):
+        self.connector = Factory(RabbitMQConnector)
+        self.connector.connect(broaker=host, port=port,vhost=vhost,
+                               queue_name=queue_name, user_name=user_name,
+                               user_password=user_password)
+        self.connector.set_receiver(self.callback_handler)
         self.main_queue = main_queue
         self.sender_queue = sender_queue
         self.procedures = HAPBaseProcedures()
@@ -199,7 +202,7 @@ class HAPBaseMainPlugin():
 
     # basic_consume call the following function with arguments.
     # But I don't use other than body.
-    def callback_handler(self, ch, method, properties, body):
+    def callback_handler(self, ch, body):
         valid_request = check_request(body)
         if valid_request is None:
             return
