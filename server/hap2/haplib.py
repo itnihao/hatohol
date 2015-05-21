@@ -219,72 +219,74 @@ class HAPBaseMainPlugin:
         return request_dict
 
 
-def convert_string_to_dict(json_string):
-    try:
-        json_dict = json.loads(json_string)
-    except Exception:
-        return -32700
-    else:
-        return json_dict
-
-
-def check_method_is_implemented(method_name):
-    for method in get_implement_methods():
-        if method_name == method:
-            return "IMPLEMENT"
+class HAPUtils:
+    @staticmethod
+    def convert_string_to_dict(json_string):
+        try:
+            json_dict = json.loads(json_string)
+        except Exception:
+            return -32700
         else:
-            return -32601
+            return json_dict
 
+    @staticmethod
+    def check_method_is_implemented(method_name):
+        for method in get_implement_methods():
+            if method_name == method:
+                return "IMPLEMENT"
+            else:
+                return -32601
 
-def check_argument_is_correct(json_dict):
-    args = inspect.getargspec(json_dict["method"])
-    for argument in json_dict["params"]:
-        if argument in args:
-            result = "OK"
+    @staticmethod
+    def check_argument_is_correct(json_dict):
+        args = inspect.getargspec(json_dict["method"])
+        for argument in json_dict["params"]:
+            if argument in args:
+                result = "OK"
 
-    return -32602
-# ToDo Think about algorithm. In case of param is object.
+        return -32602
+    # ToDo Think about algorithm. In case of param is object.
 
+    @staticmethod
+    def get_implement_procedures(class_name):
+        procedures = ()
+        modules = dir(eval(class_name))
+        for module in modules:
+            if inspect.ismethod(eval(class_name + "." + module)) and eval("PluginProcedures." + module).im_func != eval(class_name + "." + module).im_func:
+                procedures = procedures + (module,)
 
-def get_implement_procedures(class_name):
-    procedures = ()
-    modules = dir(eval(class_name))
-    for module in modules:
-        if inspect.ismethod(eval(class_name + "." + module)) and eval("PluginProcedures." + module).im_func != eval(class_name + "." + module).im_func:
-            procedures = procedures + (module,)
+        return procedures
 
-    return procedures
+    @staticmethod
+    def get_and_save_request_id(requested_ids):
+        request_id = random.randint(1, 2048)
+        requested_ids.add(request_id)
 
+        return request_id
 
-def get_and_save_request_id(requested_ids):
-    request_id = random.randint(1, 2048)
-    requested_ids.add(request_id)
+    @staticmethod
+    def translate_unix_time_to_hatohol_time(float_unix_time):
+        return datetime.strftime(datetime.fromtimestamp(float_unix_time), "%Y%m%d%H%M%S.%f")
 
-    return request_id
+    @staticmethod
+    def translate_hatohol_time_to_unix_time(hatohol_time):
+        return datetime.strptime(hatohol_unix_time, "%Y%m%d%H%M%S.%f")
 
+    @staticmethod
+    def optimize_server_procedures(valid_procedures_dict, procedures):
+        for procedure in procedures:
+            valid_procedures_dict[procedure] = True
 
-def translate_unix_time_to_hatohol_time(float_unix_time):
-    return datetime.strftime(datetime.fromtimestamp(float_unix_time), "%Y%m%d%H%M%S.%f")
+    @staticmethod
+    def find_last_info_from_dict_array(target_array, last_info_name):
+        last_info = None
+        for target_dict in target_array:
+            if last_info < target_dict[last_info_name]:
+                    last_info == target_dict[last_info_name]
 
+        return last_info
 
-def translate_hatohol_time_to_unix_time(hatohol_time):
-    return datetime.strptime(hatohol_unix_time, "%Y%m%d%H%M%S.%f")
-
-
-def optimize_server_procedures(valid_procedures_dict, procedures):
-    for procedure in procedures:
-        valid_procedures_dict[procedure] = True
-
-
-def find_last_info_from_dict_array(target_array, last_info_name):
-    last_info = None
-    for target_dict in target_array:
-        if last_info < target_dict[last_info_name]:
-                last_info == target_dict[last_info_name]
-
-    return last_info
-
-
-def get_current_hatohol_time():
-    unix_time = float(time.mktime(datetime.now().utctimetuple()))
-    return translate_unix_time_to_hatohol_time(unix_time)
+    @staticmethod
+    def get_current_hatohol_time():
+        unix_time = float(time.mktime(datetime.now().utctimetuple()))
+        return translate_unix_time_to_hatohol_time(unix_time)
