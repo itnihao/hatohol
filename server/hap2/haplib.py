@@ -284,12 +284,6 @@ def get_implement_procedures(class_name):
     return procedures
 
 
-def create_error_json(error_code, req_id = "null"):
-    error_dict = get_error_dictdd()
-    #ToDo Create place
-    return '{"jsonrpc": "2.0", "error": {"code":' + error_code + ', "message":' + error_dict[error_code] + '}, "id":' + req_id + '"}}'
-
-
 def get_and_save_request_id(requested_ids):
     request_id = random.randint(1,2048)
     requested_ids.add(request_id)
