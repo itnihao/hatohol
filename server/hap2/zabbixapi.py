@@ -25,7 +25,7 @@ import math
 import haplib
 
 TRIGGER_SEVERITY = {-1: "ALL", 0: "UNKNOWN", 1: "INFO", 2: "WARNING",
-                    3:"ERROR", 4: "CRITICAL", 5: "EMERGENCY"}
+                    3: "ERROR", 4: "CRITICAL", 5: "EMERGENCY"}
 TRIGGER_STATUS = {0: "GOOD", 1: "NG", 2: "UNKNOWN"}
 EVENT_TYPE = {0: "GOOD", 1: "BAD", 2: "UNKNOWN", 3: "NOTIFICATION"}
 
@@ -33,12 +33,11 @@ class ZabbixAPI:
     def __init__(self, monitoring_server_info):
         self.url = monitoring_server_info.url
         self.auth_token = self.get_auth_token(monitoring_server_info.user_name,
-                                monitoring_server_info.user_passwd)
+                                              monitoring_server_info.user_passwd)
         self.api_version = self.get_api_version()
 
-
     def get_auth_token(self, user_name, user_passwd):
-        params = {'user':user_name, 'password':user_passwd}
+        params = {'user': user_name, 'password': user_passwd}
         res_dict = self.get_response_dict("user.authenticate", params)
 
         self.result = check_response(res_dict)
@@ -46,7 +45,6 @@ class ZabbixAPI:
             return
 
         return res_dict["result"]
-
 
     def get_api_version(self):
         res_dict = self.get_response_dict("apiinfo.version", None)
@@ -57,9 +55,9 @@ class ZabbixAPI:
 
         return res_dict["result"][0:3]
 
-
-    def get_items(self, host_id = None):
-        params = {"output": "extend", "selectApplications": ["name"], "monitored": True}
+    def get_items(self, host_id=None):
+        params = {"output": "extend", "selectApplications": ["name"],
+                  "monitored": True}
         if host_id is not None:
             params["hostids"] = host_id
 
@@ -86,10 +84,9 @@ class ZabbixAPI:
 
         return items
 
-
     def get_history(self, item_id, begin_time, end_time):
-        params = {"output":"extend", "itemids": item_id,
-                  "history":get_item_value_type(item_id), "sortfield": "clock",
+        params = {"output": "extend", "itemids": item_id,
+                  "history": get_item_value_type(item_id), "sortfield": "clock",
                   "sortorder": "ASC", "time_from": begin_time, "time_till": end_time}
         res_dict = self.get_response_dict("history.get", params, self.auth_token)
 
@@ -105,10 +102,9 @@ class ZabbixAPI:
                 ns = float(history["ns"])/(10 ** math.log10(int(history["ns"])) + 1)
 
             histories.append({"value": history["value"],
-                            "time": haplib.translate_unix_time_to_hatohol_time(int(history["clock"]) + ns)})
+                              "time": haplib.translate_unix_time_to_hatohol_time(int(history["clock"]) + ns)})
 
         return histories
-
 
     def get_item_value_type(self, item_id):
         params = {"output": ["value_type"], "itemids": [item_id]}
@@ -120,10 +116,10 @@ class ZabbixAPI:
 
         return res_dict[0]["value_type"]
 
-
     # The following method gets not only hosts info but also host group membership.
     def get_hosts(self):
-        params = {"output": "extend", "selectGroups": "refer", "monitored_hosts": True}
+        params = {"output": "extend", "selectGroups": "refer",
+                  "monitored_hosts": True}
         res_dict = self.get_response_dict("host.get", params, self.auth_token)
 
         self.result = check_response(res_dict)
@@ -133,21 +129,22 @@ class ZabbixAPI:
         hosts = list()
         host_group_membership = list()
         for host in res_dict["result"]:
-            hosts.append({"hostId":host["hostid"], "hostName":host["name"]})
+            hosts.append({"hostId": host["hostid"], "hostName": host["name"]})
 
             group_ids = list()
             for groups in host["groups"]:
                 group_ids.append(groups["groupid"])
 
-            host_group_membership.append({"hostId":host["hostid"], "groupIds":group_ids})
+            host_group_membership.append({"hostId": host["hostid"],
+                                          "groupIds": group_ids})
 
         return (hosts, host_group_membership)
-
 
     def get_host_groups(self):
         params = {"output": "extend", "selectHosts": "refer",
                   "real_hosts": True, "monitored_hosts": True}
-        res_dict = self.get_response_dict("hostgroup.get", params, self.auth_token)
+        res_dict = self.get_response_dict("hostgroup.get", params,
+                                          self.auth_token)
 
         self.result = check_response(res_dict)
         if not self.result:
@@ -155,20 +152,22 @@ class ZabbixAPI:
 
         host_groups = list()
         for host_group in res_dict["result"]:
-            host_groups.append({"hostId": host_group["groupid"], "groupName": host_group["name"]})
+            host_groups.append({"hostId": host_group["groupid"],
+                                "groupName": host_group["name"]})
 
         return host_groups
 
-
-    def get_triggers(self, requestSince = None, host_id = None):
+    def get_triggers(self, requestSince=None, host_id=None):
         params = {"output": "extend", "selectHosts": ["name"], "active": True}
         if requestSince is not None:
             params["lastChangeSince"] = int(requestSince)
         if host_id is not None:
             params["hostids"] = host_id
 
-        res_dict = self.get_response_dict("trigger.get", params, self.auth_token)
-        expanded_res_dict = self.get_trigger_expanded_description(requestSince, host_id)
+        res_dict = self.get_response_dict("trigger.get", params,
+                                          self.auth_token)
+        expanded_res_dict = self.get_trigger_expanded_description(requestSince,
+                                                                  host_id)
 
         self.result = check_response(res_dict)
         if not self.result:
@@ -187,9 +186,9 @@ class ZabbixAPI:
 
         return triggers
 
-
-    def get_trigger_expanded_description(self, requestSince = None, host_id = None):
-        params = {"output": "description", "expandDescription":1, "active": True}
+    def get_trigger_expanded_description(self, requestSince=None, host_id=None):
+        params = {"output": "description", "expandDescription": 1,
+                  "active": True}
         if requestSince is not None:
             params["lastChangeSince"] = int(requestSince)
         if host_id is not None:
@@ -203,7 +202,6 @@ class ZabbixAPI:
 
         return res_dict
 
-
     def get_select_trigger(self, trigger_id):
         params = {"output": "extend", "triggers_id": trigger_id, "expandDescription": 1}
         res_dict = self.get_response_dict("trigger.get", params, self.auth_token)
@@ -214,8 +212,7 @@ class ZabbixAPI:
 
         return res_dict
 
-
-    def get_events(self, event_id_from, event_id_till = None):
+    def get_events(self, event_id_from, event_id_till=None):
         params = {"output": "extend", "eventid_from": event_id_from, "selectHosts": ["name"]}
         if event_id_till is not None:
             params["eventid_till"] = event_id_till
@@ -245,12 +242,10 @@ class ZabbixAPI:
                            "brief": trigger["description"],
                            "extendedInfo": ""})
 
-
         return events
 
-
-    def get_response_dict(self, method_name, params, auth_token = None):
-        HEADER = {"Content-Type":"application/json-rpc"}
+    def get_response_dict(self, method_name, params, auth_token=None):
+        HEADER = {"Content-Type": "application/json-rpc"}
         post = json.dumps({"jsonrpc": "2.0", "method": method_name,
                            "params": params, "auth": auth_token, "id": 1})
         request = urllib2.Request(self.url, post, HEADER)
