@@ -99,7 +99,7 @@ class HAPBaseSender:
     def __init__(self, host, port, vhost, queue_name, user_name,
                  user_password, sender_queue):
         self.connector = Factory(RabbitMQConnector)
-        self.connector.connect(broaker=host, port=port,vhost=vhost,
+        self.connector.connect(broaker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
                                user_password=user_password)
         self.requested_ids = set()
@@ -171,7 +171,7 @@ class HAPBaseMainPlugin:
     def __init__(self, host, port, vhost, queue_name, user_name,
                  user_password, main_queue, sender_queue):
         self.connector = Factory(RabbitMQConnector)
-        self.connector.connect(broaker=host, port=port,vhost=vhost,
+        self.connector.connect(broaker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
                                user_password=user_password)
         self.connector.set_receiver(self.callback_handler)
@@ -257,7 +257,7 @@ def get_implement_procedures(class_name):
 
 
 def get_and_save_request_id(requested_ids):
-    request_id = random.randint(1,2048)
+    request_id = random.randint(1, 2048)
     requested_ids.add(request_id)
 
     return request_id

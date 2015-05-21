@@ -85,7 +85,7 @@ class HAPZabbixSender(haplib.HAPBaseSender):
         self.trigger_last_info = None
         self.event_last_info = None
 
-    def put_items(self, host_id = None, fetch_id = None):
+    def put_items(self, host_id=None, fetch_id=None):
         params = {"items": self.api.get_items(host_id)}
         if fetch_id is not None:
             params["fetchId"] = fetch_id
@@ -133,7 +133,7 @@ class HAPZabbixSender(haplib.HAPBaseSender):
             self.get_response_and_check_id(request_id)
             self.previous_host_groups = host_groups
 
-    def update_triggers(self, host_id = None, fetchId = None):
+    def update_triggers(self, host_id=None, fetchId=None):
         if self.trigger_last_info is None:
             self.trigger_last_info = self.get_last_info("trigger")
 
@@ -167,7 +167,7 @@ class HAPZabbixSender(haplib.HAPBaseSender):
 
         events = self.api.get_events(event_id_from, event_id_till)
 
-        count =  len(events)/1000 + 1
+        count = len(events) / 1000 + 1
         for num in range(0, count):
             start = num * 1000
             send_events = events[start: start + 1000]
