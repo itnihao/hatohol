@@ -26,7 +26,7 @@ import argparse
 import time
 
 from haplib import HAPUtils, HAPBaseProcedures, HAPBaseSender,				\
-                   HAPBaseMainPlugin, ArmInfo, ERROR_DICT
+                   HAPBaseMainPlugin, ArmInfo, ERROR_DICT, SERVER_PROCEDURES
 import zabbixapi
 
 class PreviousHostsInfo:
