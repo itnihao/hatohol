@@ -98,11 +98,10 @@ class HAPBaseProcedures():
 class HAPBaseSender:
     def __init__(self, host, port, vhost, queue_name, user_name,
                  user_password, sender_queue):
-        self.connector = Factory(RabbitMQConnector)
-        self.connector.connect(broaker=host, port=port, vhost=vhost,
         self.connector = Factory.create(RabbitMQConnector)
+        self.connector.connect(broker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
-                               user_password=user_password)
+                               password=user_password)
         self.requested_ids = set()
         self.arminfo = haplib.ArmInfo()
         ms_dict = self.get_monitoring_server_info()

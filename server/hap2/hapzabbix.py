@@ -200,7 +200,7 @@ class HAPZabbixPoller:
         self.sender = HAPZabbixSender(host,
                                       port,
                                       vhost,
-                                      "p_"+self.queue_name,
+                                      "p_"+queue_name,
                                       user_name,
                                       user_password,
                                       sender_queue)
@@ -284,7 +284,7 @@ if __name__ == '__main__':
                         default=None,
                         help="RabbitMQ vhost")
     parser.add_argument("--port",
-                        dest="rabbitmq_port",
+                        dest="port",
                         type=int,
                         default=None,
                         help="RabbitMQ port")
