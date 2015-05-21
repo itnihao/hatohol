@@ -103,7 +103,6 @@ class HAPBaseSender:
                                queue_name=queue_name, user_name=user_name,
                                password=user_password)
         self.requested_ids = set()
-        self.arminfo = ArmInfo()
         ms_dict = self.get_monitoring_server_info()
         self.ms_info = MonitoringServerInfo(ms_dict)
 
