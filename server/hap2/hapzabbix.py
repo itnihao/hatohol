@@ -107,38 +107,38 @@ class HAPZabbixSender(haplib.HAPBaseSender):
         self.get_response_and_check_id(request_id)
 
 
-    def update_hosts_and_host_group_membership(self, previous_hosts, previous_host_group_membership):
+    def update_hosts_and_host_group_membership(self):
         hosts, hg_membership = self.api.get_hosts()
 
         hosts.sort()
-        if previous_hosts != hosts:
+        if self.previous_hosts != hosts:
             hosts_params = {"updateType": "ALL", "hosts": hosts}
             request_id = haplib.get_and_save_request_id(self.requested_ids)
             self.send_request_to_queue("updateHosts", params, request_id)
             self.get_response_and_check_id(request_id)
-            previous_hosts = hosts
+            self.previous_hosts = hosts
 
         hg_membership.sort()
-        if previous_host_group_membership != hg_membership:
+        if self.previous_host_group_membership != hg_membership:
             hg_membership_params = {"updateType": "ALL", "hostGroupMembership": hg_membership}
             request_id = haplib.get_and_save_request_id(self.requested_ids)
             self.send_request_to_queue("updateHostGroupMembership", params, request_id)
             self.get_response_and_check_id(request_id)
-            previous_host_group_membership = hg_membership
+            self.previous_host_group_membership = hg_membership
 
 
-    def update_host_groups(self, previous_host_groups):
+    def update_host_groups(self):
         host_groups = api.get_host_groups()
         host_groups.sort()
-        if previous_host_groups != host_groups:
+        if self.previous_host_groups != host_groups:
             hosts_params = {"updateType": "ALL", "hostGroups": host_groups}
             request_id = haplib.get_and_save_request_id(self.requested_ids)
             self.send_request_to_queue("updateHostGroups", params, request_id)
             self.get_response_and_check_id(request_id)
-            previous_host_groups = host_groups
+            self.previous_host_groups = host_groups
 
 
-    def update_triggers(self, requests_since = None, host_id = None, fetchId = None):
+    def update_triggers(self, host_id = None, fetchId = None):
         if self.trigger_last_info is None:
             self.trigger_last_info = self.get_last_info("trigger")
 
