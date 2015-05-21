@@ -35,102 +35,55 @@ class PreviousHostsInfo:
         self.host_group_membeship = list()
 
 
-class HAPZabbixRabbitMQConsumer(haplib.RabbitMQConsumer, haplib.PluginProcedures):
-    def __init__(self, host, port, queue_name, user_name, user_password, consumer_queue, publisher_queue):
-        RabbitMQConsumer.__init__(self, host, port, "c_" + queue_name, user_name,
-                                  user_password)
-        self.consumer_queue = consumer_queue
-        self.publisher_queue = publisher_queue
-        self.publisher = HAPZabbixRabbitMQPublisher(host, port,
-                                                    "p_" + queue_name,
-                                                    user_name, user_password,
-                                                    queue)
-        self.procedures = {"exchangeProfile": self.hap_exchange_profile,
-                           "fetchItems": self.hap_fetch_items,
-                           "fetchHistory": self.hap_fetch_history,
-                           "fetchTriggers": self.hap_fetch_triggers,
-                           "fetchEvents": self.hap_fetch_events}
-
-    # basic_consume call the following function with arguments.
-    # But I don't use other than body.
-    def callback_handler(self, ch, method, properties, body):
-        valid_json_dict = check_request(body)
-        if valid_json_dict is None:
-            return
-
-        try:
-            self.procedures[valid_json_dict["method"]](valid_json_dict["params"],
-                                                       valid_json_dict["id"])
-        except KeyError:
-            if valid_json_dict["id"] in self.requested_ids:
-                consumer_queue.put(valid_json_dict)
-            else:
-                publisher_queue.put(valid_json_dict)
+class HAPZabbixHandlerProcedures(haplib.HAPBaseHandlerProcedures):
+    def __init__(self, host, port, queue_name, user_name, user_password, queue):
+        self.sender.g = HAPZabbixSender(host, port, queue_name, user_name, user_password, queue)
 
 
     def hap_exchange_profile(self, params, request_id):
-        haplib.optimize_server_procedures(SERVER_PROCEDURES, params)
-        my_procedures = haplib.get_implement_procedures(HapZabbixProcedures)
-        self.exchange_profile(my_procedures, request_id)
+        haplib.optimize_server_procedures(haplib.SERVER_PROCEDURES, params)
+        #ToDo Implement get_implement_procedures
+        my_procedures = haplib.get_implement_procedures()
+        self.sender.g.exchange_profile(my_procedures, request_id)
 
 
     def hap_fetch_items(self, params, request_id):
-        self.send_response_to_queue("SUCCESS", request_id)
-        self.publisher.put_items(params["hostId"], params["fetchId"])
+        self.sender.g.send_response_to_queue("SUCCESS", request_id)
+        self.sender.g.put_items(params["hostId"], params["fetchId"])
 
 
     def hap_fetch_history(self, params, request_id):
-        self.send_response_to_queue("SUCCESS", request_id)
-        self.publisher.put_history(params["itemId"], params["fetchId"])
+        self.sender.g.send_response_to_queue("SUCCESS", request_id)
+        self.sender.g.put_history(params["itemId"], params["fetchId"])
 
 
     def hap_fetch_triggers(self, params, request_id):
-        self.send_response_to_queue("SUCCESS", request_id)
-        self.publisher.update_triggers(params["lastChangeTime"], params["hostId"],
+        self.sender.g.send_response_to_queue("SUCCESS", request_id)
+        self.sender.g.update_triggers(params["lastChangeTime"], params["hostId"],
                                  params["fetchId"])
 
 
     def hap_fetch_events(self, params, request_id):
-        self.send_response_to_queue("SUCCESS", request_id)
-        self.publisher.update_events(params["lastInfo"], params["count"],
+        self.sender.g.send_response_to_queue("SUCCESS", request_id)
+        self.sender.g.update_events(params["lastInfo"], params["count"],
                                  params["direction"], params["fetchId"])
 
 
-class HAPZabbixRabbitMQPublisher(haplib.RabbitMQPublisher):
+class HAPZabbixReceiver(haplib.HAPBaseReceiver):
+    def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
+        haplib.HAPBaseReceiver.__init__()
+        self.procedures = HAPZabbixHandlerProcedures(host, port, "s_"+queue_name, user_name,
+                                    user_password, receiver_queue)
+
+
+class HAPZabbixSender(haplib.HAPBaseSender):
     def __init__(self, host, port, queue_name, user_name, user_password, queue):
-        RabbitMQPublisher.__init__(self, host, port, queue_name, user_name, user_password)
+        haplib.HAPBaseSender.__init__(self, host, port, queue_name, user_name, user_password)
         self.queue = queue
-        ms_dict = self.get_monitoring_server_info()
-        self.ms_info = haplib.MonitoringServerInfo(ms_dict)
         self.api = zabbixapi.ZabbixAPI(self.ms_info)
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
         self.event_last_info = None
-        self.arminfo = haplib.ArmInfo()
-
-
-    def get_monitoring_server_info(self):
-        params = ""
-        request_id = get_and_save_request_id(self.requested_ids)
-        self.send_request_to_queue("getMonitoringServerInfo", params, request_id)
-        return self.get_response_and_check_id(request_id)
-
-
-    def get_last_info(self, element):
-        params = element
-        request_id = get_and_save_request_id(self.requested_ids)
-        self.send_request_to_queue("getLastInfo", params, request_id)
-
-        return self.get_response_and_check_id(request_id)
-
-
-    def exchange_profile(self, procedures, response_id=None):
-        if response_id is None:
-            request_id = get_and_save_request_id(self.requested_ids)
-            self.send_request_to_queue("exchangeProfile", procedures, request_id)
-            self.get_response_and_check_id(request_id)
-        else:
-            self.send_response_to_queue(procedures, response_id)
 
 
     def put_items(self, host_id = None, fetch_id = None):
