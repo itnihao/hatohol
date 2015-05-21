@@ -27,6 +27,15 @@ class TestTransporter(unittest.TestCase):
         obj = transporter.Factory.create(Transporter)
         self.assertEquals(obj.__class__.__name__, "Transporter")
 
+    def test_factory_with_args(self):
+        class DummyTransporter:
+            def __init__(self, arg1, arg2=None, arg3=None):
+                self.args = [arg1, arg2, arg3]
+
+        obj = transporter.Factory.create(DummyTransporter, 1, arg3=2)
+        self.assertEquals(obj.__class__.__name__, "DummyTransporter")
+        self.assertEquals(obj.args, [1, None, 2])
+
     def test_get_receiver(self):
         tx = transporter.Factory.create(Transporter)
         self.assertIsNone(tx.get_receiver())

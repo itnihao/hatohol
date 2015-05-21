@@ -66,10 +66,10 @@ class Transporter:
 
 class Factory:
     @classmethod
-    def create(cls, transporter_class):
+    def create(cls, transporter_class, *args, **kwargs):
         """
         Create a transporter object.
         @param name A name of the transporter.
         @return A created transporter object.
         """
-        return transporter_class()
+        return transporter_class(*args, **kwargs)
