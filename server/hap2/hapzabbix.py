@@ -96,7 +96,8 @@ class HAPZabbixSender(haplib.HAPBaseSender):
         self.get_response_and_check_id(request_id)
 
     def put_history(self, item_id, fetch_id):
-        params = {"itemId": item_id, "histories": self.api.get_history(item_id),
+        params = {"itemId": item_id,
+                  "histories": self.api.get_history(item_id),
                   "fetchId": fetch_id}
 
         request_id = haplib.get_and_save_request_id(self.requested_ids)
@@ -117,9 +118,11 @@ class HAPZabbixSender(haplib.HAPBaseSender):
 
         hg_membership.sort()
         if self.previous_host_group_membership != hg_membership:
-            hg_membership_params = {"updateType": "ALL", "hostGroupMembership": hg_membership}
+            hg_membership_params = {"updateType": "ALL",
+                                    "hostGroupMembership": hg_membership}
             request_id = haplib.get_and_save_request_id(self.requested_ids)
-            self.send_request_to_queue("updateHostGroupMembership", params, request_id)
+            self.send_request_to_queue("updateHostGroupMembership", params,
+                                       request_id)
             self.get_response_and_check_id(request_id)
             self.previous_host_group_membership = hg_membership
 
@@ -138,7 +141,8 @@ class HAPZabbixSender(haplib.HAPBaseSender):
             self.trigger_last_info = self.get_last_info("trigger")
 
         triggers = self.api.get_triggers(self.trigger_last_info, host_id)
-        self.trigger_last_info = haplib.find_last_info_from_dict_array(triggers, "lastChangeTime")
+        self.trigger_last_info =
+              haplib.find_last_info_from_dict_array(triggers, "lastChangeTime")
 
         params = {"triggers": triggers, "updateType": "UPDATED",
                   "lastInfo": self.trigger_last_info}
@@ -151,7 +155,8 @@ class HAPZabbixSender(haplib.HAPBaseSender):
         self.send_request_to_queue("updateTriggers", params, request_id)
         self.get_response_and_check_id(request_id)
 
-    def update_events(self, last_info=None, count=None, direction="ASC", fetch_id=None):
+    def update_events(self, last_info=None, count=None, direction="ASC",
+                      fetch_id=None):
         if last_info is None:
             last_info = self.get_last_info("event")
 
@@ -173,7 +178,8 @@ class HAPZabbixSender(haplib.HAPBaseSender):
             send_events = events[start: start + 1000]
             last_info = haplib.find_last_info_from_dict_array(send_events,
                                                               "eventId")
-            params = {"events": send_events, "lastInfo": last_info, "updateType": "UPDATE"}
+            params = {"events": send_events, "lastInfo": last_info,
+                      "updateType": "UPDATE"}
 
             if fetch_id is not None:
                 params["fetchId"] = fetch_id
