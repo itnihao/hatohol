@@ -40,26 +40,17 @@ SERVER_PROCEDURES = {"exchangeProfile": True,
                      "updateArmInfo": True}
 
 
-class PluginProcedures:
-    def exchangeProfile(self):
-        print "Not implement"
+def get_error_dict():
+    error_dict = {-32700: "Parse error", -32600: "invalid Request",
+                  -32601: "Method not found", -32602: "invalid params",
+                  -32603: "Internal error"}
+    for num in range(-32000, -32100):
+        error_dict[str(num)] = "Server error"
+
+    return error_dict
 
 
-    def fetchItems(self):
-        print "Not implement"
-
-
-    def fetchHistory(self):
-        print "Not implement"
-
-
-    def fetchTriggers(self):
-        print "Not implement"
-
-
-    def fetchEvents(self):
-        print "Not implement"
-
+ERROR_DICT = get_error_dict()
 
 class MonitoringServerInfo:
     def __init__(self, ms_info_dict):
