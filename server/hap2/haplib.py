@@ -111,32 +111,22 @@ class HAPBaseSender:
         ms_dict = self.get_monitoring_server_info()
         self.ms_info = haplib.MonitoringServerInfo(ms_dict)
 
-
     def send_request_to_queue(self, procedure_name, params, request_id):
         request = json.dumps({"jsonrpc": "2.0", "method": procedure_name,
                               "params": params, "id": request_id})
-        self.connector.channel.basic_publish(exchange="",
-                                             routing_key=self.queue_name,
-                                             body=request)
-
+        self.connector.call(request)
 
     def send_response_to_queue(self, result, response_id):
         response = json.dumps({"jsonrpc": "2.0", "result": result,
                                "id": request_id})
-        self.connector.channel.basic_publish(exchange="",
-                                             routing_key=self.queue_name,
-                                             body=response)
-
+        self.connector.reply(request)
 
     def send_error_to_queue(self, error_code, response_id):
         response = json.dumps({"jsonrpc": "2.0",
                                "error": {"code": error_code,
                                          "message": ERROR_DICT[error_code]},
                                "id": response_id})
-        self.connector.channel.basic_publish(exchange="",
-                                             routing_key=self.queue_name,
-                                             body=response)
-
+        self.connector.reply(response)
 
     def get_monitoring_server_info(self):
         params = ""
