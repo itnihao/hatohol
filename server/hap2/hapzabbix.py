@@ -83,7 +83,7 @@ class HAPZabbixSender(haplib.HAPBaseSender):
     def __init__(self, host, port, vhost, queue_name, user_name,
                  user_password, sender_queue):
         haplib.HAPBaseSender.__init__(self, host, port, vhost, queue_name,
-                                      user_name, user_password)
+                                      user_name, user_password, sender_queue)
         self.api = zabbixapi.ZabbixAPI(self.ms_info)
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None

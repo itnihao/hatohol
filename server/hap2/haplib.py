@@ -165,7 +165,7 @@ class HAPBaseSender:
         self.get_response_and_check_id(request_id)
 
 
-    def get_response_and_check_id(request_id):
+    def get_response_and_check_id(self, request_id):
         # We should set time out in this loop condition.
         while True:
             response_dict = self.sender_queue.get()
