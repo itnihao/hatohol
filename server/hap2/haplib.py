@@ -102,6 +102,7 @@ class HAPBaseSender:
         self.connector.connect(broker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
                                password=user_password)
+        self.sender_queue = sender_queue
         self.requested_ids = set()
         ms_dict = self.get_monitoring_server_info()
         self.ms_info = MonitoringServerInfo(ms_dict)
