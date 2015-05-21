@@ -82,18 +82,14 @@ class HAPBaseProcedures():
     def hap_exchange_profile(self, params, request_id):
         pass
 
-
     def hap_fetch_items(self, params, request_id):
         pass
-
 
     def hap_fetch_history(self, params, request_id):
         pass
 
-
     def hap_fetch_triggers(self, params, request_id):
         pass
-
 
     def hap_fetch_events(self, params, request_id):
         pass
@@ -134,14 +130,12 @@ class HAPBaseSender:
         self.send_request_to_queue("getMonitoringServerInfo", params, request_id)
         return self.get_response_and_check_id(request_id)
 
-
     def get_last_info(self, element):
         params = element
         request_id = get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("getLastInfo", params, request_id)
 
         return self.get_response_and_check_id(request_id)
-
 
     def exchange_profile(self, procedures, response_id=None):
         if response_id is None:
@@ -150,7 +144,6 @@ class HAPBaseSender:
             self.get_response_and_check_id(request_id)
         else:
             self.send_response_to_queue(procedures, response_id)
-
 
     def update_arm_info(self, arm_info):
         params = {"lastStatus": arm_info.last_status,
@@ -163,7 +156,6 @@ class HAPBaseSender:
         request_id = haplib.get_and_save_request_id(self.requested_ids)
         self.send_request_to_queue("updateArmInfo", params, request_id)
         self.get_response_and_check_id(request_id)
-
 
     def get_response_and_check_id(self, request_id):
         # We should set time out in this loop condition.
@@ -192,7 +184,6 @@ class HAPBaseMainPlugin:
                                 "fetchTriggers": procedures.hap_fetch_triggers,
                                 "fetchEvents": procedures.hap_fetch_events}
 
-
     # basic_consume call the following function with arguments.
     # But I don't use other than body.
     def callback_handler(self, ch, body):
@@ -208,7 +199,6 @@ class HAPBaseMainPlugin:
                 self.main_queue.put(valid_request)
             else:
                 self.sender_queue.put(valid_request)
-
 
     def check_request(self, request_str):
         request_dict = convert_string_to_dict(request_str)
