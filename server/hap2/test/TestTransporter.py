@@ -24,24 +24,24 @@ import transporter
 class TestTransporter(unittest.TestCase):
 
     def test_factory(self):
-      obj = transporter.Factory.create(Transporter)
-      self.assertEquals(obj.__class__.__name__, "Transporter")
+        obj = transporter.Factory.create(Transporter)
+        self.assertEquals(obj.__class__.__name__, "Transporter")
 
     def test_get_receiver(self):
-      tx = transporter.Factory.create(Transporter)
-      self.assertIsNone(tx.get_receiver())
+        tx = transporter.Factory.create(Transporter)
+        self.assertIsNone(tx.get_receiver())
 
     def test_set_receiver(self):
-      def receiver():
-          pass
+        def receiver():
+            pass
 
-      def receiver2():
-          pass
+        def receiver2():
+            pass
 
-      tx = transporter.Factory.create(Transporter)
-      tx.set_receiver(receiver)
-      self.assertEquals(tx.get_receiver(), receiver)
+        tx = transporter.Factory.create(Transporter)
+        tx.set_receiver(receiver)
+        self.assertEquals(tx.get_receiver(), receiver)
 
-      # update
-      tx.set_receiver(receiver2)
-      self.assertEquals(tx.get_receiver(), receiver2)
+        # update
+        tx.set_receiver(receiver2)
+        self.assertEquals(tx.get_receiver(), receiver2)
