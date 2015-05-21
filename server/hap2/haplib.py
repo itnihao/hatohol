@@ -180,7 +180,7 @@ class HAPBaseSender:
                 return response_dict["result"]
 
 
-class HAPBaseReceiver():
+class HAPBaseMainPlugin():
     def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
         self.connector = RabbitMQConnector(host, port, queue_name,
                                            user_name, user_password)

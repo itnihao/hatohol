@@ -69,9 +69,9 @@ class HAPZabbixProcedures(haplib.HAPBaseProcedures):
                                  params["direction"], params["fetchId"])
 
 
-class HAPZabbixReceiver(haplib.HAPBaseReceiver):
+class HAPZabbixMainPlugin(haplib.HAPBaseMainPlugin):
     def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
-        haplib.HAPBaseReceiver.__init__()
+        haplib.HAPBaseMainPlugin.__init__()
         self.procedures = HAPZabbixProcedures(host, port, "s_"+queue_name, user_name,
                                     user_password, receiver_queue)
 
@@ -253,7 +253,7 @@ class HAPZabbixDaemon:
                                  self.user_name,
                                  self.user_password,
                                  poller_queue)
-        receiver = HAPZabbixReceiver(self.host,
+        receiver = HAPZabbixMainPlugin(self.host,
                                      self.port,
                                      self.queue_name,
                                      self.user_name,
