@@ -22,7 +22,7 @@
 import urllib2
 import json
 import math
-import haplib
+from haplib import HAPUtils
 
 TRIGGER_SEVERITY = {-1: "ALL", 0: "UNKNOWN", 1: "INFO", 2: "WARNING",
                     3: "ERROR", 4: "CRITICAL", 5: "EMERGENCY"}
@@ -77,7 +77,7 @@ class ZabbixAPI:
             items.append({"itemId": item["itemid"],
                           "hostId": item["hostid"],
                           "brief": item["name"],
-                          "lastValueTime": haplib.translate_unix_time_to_hatohol_time(int(item["lastclock"]) + ns),
+                          "lastValueTime": HAPUtils.translate_unix_time_to_hatohol_time(int(item["lastclock"]) + ns),
                           "lastValue": item["lastvalue"],
                           "itemGroupName": get_item_groups(item["applications"]),
                           "unit": item["units"]})
@@ -102,7 +102,7 @@ class ZabbixAPI:
                 ns = float(history["ns"])/(10 ** math.log10(int(history["ns"])) + 1)
 
             histories.append({"value": history["value"],
-                              "time": haplib.translate_unix_time_to_hatohol_time(int(history["clock"]) + ns)})
+                              "time": HAPUtils.translate_unix_time_to_hatohol_time(int(history["clock"]) + ns)})
 
         return histories
 
@@ -178,7 +178,7 @@ class ZabbixAPI:
             triggers.append({"triggerId": trigger["triggerid"],
                              "status": "OK",
                              "severity": trigger["priority"],
-                             "lastChangeTime": haplib.translate_unix_time_to_hatohol_time(int(trigger["lastchange"])),
+                             "lastChangeTime": HAPUtils.translate_unix_time_to_hatohol_time(int(trigger["lastchange"])),
                              "hostId": trigger["hosts"][0]["hostid"],
                              "hostName": trigger["hosts"][0]["name"],
                              "brief": trigger["description"],
@@ -232,7 +232,7 @@ class ZabbixAPI:
 
             trigger = self.get_select_trigger(event["objectid"])
             events.append({"eventId": event["eventid"],
-                           "time": haplib.translate_unix_time_to_hatohol_time(int(event["clock"]) + ns),
+                           "time": HAPUtils.translate_unix_time_to_hatohol_time(int(event["clock"]) + ns),
                            "type": EVENT_TYPE[event["value"]],
                            "triggerId": trigger["triggerid"],
                            "status": TRIGGER_STATUS[event["value"]],
