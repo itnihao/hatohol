@@ -1,4 +1,4 @@
-#! /usr/lib/env python
+#! /usr/bin/env python
 # coding: UTF-8
 """
   Copyright (C) 2015 Project Hatohol
