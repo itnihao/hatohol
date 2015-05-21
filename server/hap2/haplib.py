@@ -75,16 +75,6 @@ class ArmInfo:
         self.num_failure = int()
 
 
-class RabbitMQConnector:
-    def __init__(self, host, port, queue_name, user_name, user_password):
-        self.queue_name = queue_name
-        credentials = pika.PlaneCredentials(user_name, user_password)
-        param = pika.ConnectionParameter(host=host, port=port, credentials=credentials)
-        connection = pika.BlockingConnenction(param)
-        self.channel = connection.channel()
-        self.channel.queue_declare(queue=queue_name)
-
-
 class HAPBaseHandlerProcedures():
     def hap_exchange_profile(self, params, request_id):
         pass
