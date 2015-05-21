@@ -85,11 +85,36 @@ class RabbitMQConnector:
         self.channel.queue_declare(queue=queue_name)
 
 
-class RabbitMQPublisher():
-    def __init__(self, host, port, queue_name, user_name, user_password):
-        self.connecter = RabbitMQConnector(host, port, queue_name,
+class HAPBaseHandlerProcedures():
+    def hap_exchange_profile(self, params, request_id):
+        pass
+
+
+    def hap_fetch_items(self, params, request_id):
+        pass
+
+
+    def hap_fetch_history(self, params, request_id):
+        pass
+
+
+    def hap_fetch_triggers(self, params, request_id):
+        pass
+
+
+    def hap_fetch_events(self, params, request_id):
+        pass
+
+
+class HAPBaseSender:
+    def __init__(self, host, port, queue_name, user_name, user_password, sender_queue):
+        self.connector = RabbitMQConnector(host, port, queue_name,
                                            user_name, user_password)
+        self.queue_name = queue_name
         self.requested_ids = set()
+        self.arminfo = haplib.ArmInfo()
+        ms_dict = self.get_monitoring_server_info()
+        self.ms_info = haplib.MonitoringServerInfo(ms_dict)
 
 
     def send_request_to_queue(self, procedure_name, params, request_id):
@@ -108,20 +133,92 @@ class RabbitMQPublisher():
                                              body=response)
 
 
-class RabbitMQConsumer(RabbitMQConnector):
-    def __init__(self, host, port, queue_name, user_name, user_password):
+    def send_error_to_queue(self, error_code, response_id):
+        response = json.dumps({"jsonrpc": "2.0",
+                               "error": {"code": error_code,
+                                         "message": ERROR_DICT[error_code]},
+                               "id": response_id})
+        self.connector.channel.basic_publish(exchange="",
+                                             routing_key=self.queue_name,
+                                             body=response)
+
+
+    def get_monitoring_server_info(self):
+        params = ""
+        request_id = get_and_save_request_id(self.requested_ids)
+        self.send_request_to_queue("getMonitoringServerInfo", params, request_id)
+        return self.get_response_and_check_id(request_id)
+
+
+    def get_last_info(self, element):
+        params = element
+        request_id = get_and_save_request_id(self.requested_ids)
+        self.send_request_to_queue("getLastInfo", params, request_id)
+
+        return self.get_response_and_check_id(request_id)
+
+
+    def exchange_profile(self, procedures, response_id=None):
+        if response_id is None:
+            request_id = get_and_save_request_id(self.requested_ids)
+            self.send_request_to_queue("exchangeProfile", procedures, request_id)
+            self.get_response_and_check_id(request_id)
+        else:
+            self.send_response_to_queue(procedures, response_id)
+
+
+    def update_arm_info(self, arm_info):
+        params = {"lastStatus": arm_info.last_status,
+                  "failureReason": arm_info.failure_reason,
+                  "lastSuccessTime": arm_info.last_success_time,
+                  "lastFailureTime": arm_info.last_failure_time,
+                  "numSuccess": arm_info.num_success,
+                  "numFailure": arm_info.num_failure}
+
+        request_id = haplib.get_and_save_request_id(self.requested_ids)
+        self.send_request_to_queue("updateArmInfo", params, request_id)
+        self.get_response_and_check_id(request_id)
+
+
+    def get_response_and_check_id(request_id):
+        # We should set time out in this loop condition.
+        while True:
+            response_dict = self.queue.get()
+            if request_id == response_dict["id"]:
+                self.requested_ids.remove(request_id)
+
+                return response_dict["result"]
+
+
+class HAPBaseReceiver():
+    def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
         self.connector = RabbitMQConnector(host, port, queue_name,
                                            user_name, user_password)
-        self.plugin_procedures = PluginProcedures()
-        self.procedures_instance_name = "self.plugin_procedures"
+        self.receiver_queue = receiver_queue
+        self.sender_queue = sender_queue
+        self.procedures = HAPBaseHandlerProcedures()
+        self.procedures_dict = {"exchangeProfile": procedures.hap_exchange_profile,
+                           "fetchItems": procedures.hap_fetch_items,
+                           "fetchHistory": procedures.hap_fetch_history,
+                           "fetchTriggers": procedures.hap_fetch_triggers,
+                           "fetchEvents": procedures.hap_fetch_events}
 
 
+    # basic_consume call the following function with arguments.
+    # But I don't use other than body.
     def callback_handler(self, ch, method, properties, body):
-        valid_json_dict = self.check_json(body)
-        if valid_json_dict is None:
+        valid_request = check_request(body)
+        if valid_request is None:
             return
 
-        eval(self.procedures_instance_name + valid_json_dict["method"])(valid_json_dict)
+        try:
+            self.procedures[valid_request["method"]](valid_request["params"],
+                                                     valid_request["id"])
+        except KeyError:
+            if valid_request["id"] in sender.requested_ids:
+                self.receiver_queue.put(valid_request)
+            else:
+                self.sender_queue.put(valid_request)
 
 
     def start_receiving(self):
@@ -131,33 +228,23 @@ class RabbitMQConsumer(RabbitMQConnector):
         self.connector.channel.start_consuming()
 
 
-    def check_json(self, json_string):
-        json_dict = convert_string_to_dict(json_string)
-        if not isinstance(json_dict, dict):
-            send_json_to_que(create_error_json(json_dict))
+    def check_request(self, request_str):
+        request_dict = convert_string_to_dict(request_str)
+        if not isinstance(request_dict, dict):
+            self.sender.send_json_to_que(create_error_json(request_dict))
             return
 
-        result = check_implement_method(json_dict["method"])
+        result = check_implement_method(request_dict["method"])
         if result is not None:
-            send_json_to_que(create_error_json(result, json_dict["id"]))
+            send_json_to_que(create_error_json(result, request_dict["id"]))
             return
 
-        result = check_argument_is_correct(json_dict["method"])
+        result = check_argument_is_correct(request_dict["method"])
         if result is not None:
-            send_json_to_que(create_error_json(result, json_dict["id"]))
+            send_json_to_que(create_error_json(result, request_dict["id"]))
             return
 
-        return json_dict
-
-
-def get_error_dict():
-    error_dict = {-32700: "Parse error", -32600: "invalid Request",
-                  -32601: "Method not found", -32602: "invalid params",
-                  -32603: "Internal error"}
-    for num in range(-32000, -32100):
-        error_dict[str(num)] = "Server error"
-
-    return error_dict
+        return request_dict
 
 
 def convert_string_to_dict(json_string):
@@ -230,6 +317,7 @@ def find_last_info_from_dict_array(target_array, last_info_name):
                 last_info == target_dict[last_info_name]
 
     return last_info
+
 
 def get_current_hatohol_time():
     unix_time = float(time.mktime(datetime.now().utctimetuple()))
