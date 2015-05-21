@@ -265,7 +265,7 @@ class HAPZabbixDaemon:
         subprocess.daemon = True
         subprocess.start()
 
-        main_plugin.start_receiving()
+        main_plugin.connector.run_receive_loop()
 
 
 if __name__ == '__main__':
