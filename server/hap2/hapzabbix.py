@@ -141,8 +141,8 @@ class HAPZabbixSender(haplib.HAPBaseSender):
             self.trigger_last_info = self.get_last_info("trigger")
 
         triggers = self.api.get_triggers(self.trigger_last_info, host_id)
-        self.trigger_last_info =
-              haplib.find_last_info_from_dict_array(triggers, "lastChangeTime")
+        self.trigger_last_info =											\
+            haplib.find_last_info_from_dict_array(triggers, "lastChangeTime")
 
         params = {"triggers": triggers, "updateType": "UPDATED",
                   "lastInfo": self.trigger_last_info}
