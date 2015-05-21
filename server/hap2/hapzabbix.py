@@ -194,31 +194,44 @@ class HAPZabbixSender(haplib.HAPBaseSender):
         self.event_last_info = last_info
 
 
-    def update_arm_info(self, arm_info):
-        params = {"lastStatus": arm_info.last_status,
-                  "failureReason": arm_info.failure_reason,
-                  "lastSuccessTime": arm_info.last_success_time,
-                  "lastFailureTime": arm_info.last_failure_time,
-                  "numSuccess": arm_info.num_success,
-                  "numFailure": arm_info.num_failure}
-
-        request_id = haplib.get_and_save_request_id(self.requested_ids)
-        self.send_request_to_queue("updateArmInfo", params, request_id)
-        self.get_response_and_check_id(request_id)
+class HAPZabbixPoller:
+    def __init__(self, host, port, queue_name, user_name, user_password, sender_queue):
+        self.sender = HAPZabbixSender(host,
+                                      port,
+                                      "p_"+self.queue_name,
+                                      user_name,
+                                      user_password,
+                                      sender_queue)
 
 
-    def get_response_and_check_id(request_id):
-        # We should set time out in this loop condition.
+    def update_lump(self):
+        self.sender.put_items()
+        self.sender.update_hosts_and_host_group_membership()
+        self.sender.update_host_groups()
+        self.sender.update_triggers()
+        self.sender.update_events()
+
+
+    def poll(self):
+        arm_info = haplib.ArmInfo()
         while True:
-            response_dict = self.queue.get()
-            if request_id == response_dict["id"]:
-                self.requested_ids.remove(request_id)
+            sleep_time = sender.ms_info.interval_sec
+            try:
+                self.update_lump()
+                arm_info.last_status = "OK"
+                arm_info.failure_reason = ""
+                arm_info.last_success_time = haplib.get_current_hatohol_time()
+                arm_info.num_success += 1
+            except:
+                sleep_time = sender.ms_info.retry_interval_sec
+                arm_info.last_status = "NG"
+                #ToDo Think about how to input failure_reason
+                # arm_info.failure_reason = ""
+                arm_info.failure_time = haplib.get_current_hatohol_time()
+                arm_info.num_failure += 1
 
-                return response_dict["result"]
-
-
-    def routine_update(self):
-        print "Not implement"
+            sender.update_arm_info(arm_info)
+            time.sleep(sleep_time)
 
 
 class HAPZabbixDaemon:
