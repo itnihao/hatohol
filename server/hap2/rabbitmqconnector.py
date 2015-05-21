@@ -47,6 +47,12 @@ class RabbitMQConnector(Transporter):
         self._channel = connection.channel()
         self._channel.queue_declare(queue=queue_name)
 
+    def call(self, msg):
+        self._publish(msg)
+
+    def reply(self, msg):
+        self._publish(msg)
+
     def run_receive_loop(self):
         assert self._channel != None
 
@@ -60,4 +66,8 @@ class RabbitMQConnector(Transporter):
             logging.warning("Receiver is not registered.")
             return
         receiver(self._channel, body)
+
+    def _publish(self, msg):
+        self._channel.basic_publish(exchange="", routing_key=self._queue_name,
+                                    body=msg)
 

@@ -40,6 +40,20 @@ class TestRabbitMQConnector(unittest.TestCase):
         conn.connect(self._broker, self._port, self._vhost, self._queue_name,
                      self._user_name, self._password)
 
+    def test_call(self):
+        TEST_BODY = "CALL TEST"
+        self._delete_test_queue()
+        conn = self._create_connected_connector()
+        conn.call(TEST_BODY)
+        self.assertEqual(self._get_from_test_queue(), TEST_BODY)
+
+    def test_reply(self):
+        TEST_BODY = "REPLY TEST"
+        self._delete_test_queue()
+        conn = self._create_connected_connector()
+        conn.reply(TEST_BODY)
+        self.assertEqual(self._get_from_test_queue(), TEST_BODY)
+
     def test_run_receive_loop_without_connect(self):
         conn = RabbitMQConnector()
         self.assertRaises(AssertionError, conn.run_receive_loop)
@@ -61,6 +75,18 @@ class TestRabbitMQConnector(unittest.TestCase):
         conn.run_receive_loop()
         self.assertEquals(receiver.msg, TEST_BODY)
 
+    def _create_connected_connector(self):
+        conn = RabbitMQConnector()
+        conn.connect(self._broker, self._port, self._vhost, self._queue_name,
+                     self._user_name, self._password)
+        return conn
+
+    def _execute(self, args):
+        subproc = subprocess.Popen(args, stdout=subprocess.PIPE)
+        output = subproc.communicate()[0]
+        self.assertEquals(subproc.returncode, 0)
+        return output
+
     def _build_broker_url(self):
         return "amqp://%s:%s@%s/%s" % (self._user_name, self._password,
                                        self._broker, self._vhost)
@@ -69,6 +95,11 @@ class TestRabbitMQConnector(unittest.TestCase):
         args = ["amqp-publish", "-u", self._build_broker_url(),
                 "-r", self._queue_name, "-b", body]
         subprocess.Popen(args).communicate()
+
+    def _get_from_test_queue(self):
+        args = ["amqp-get", "-u", self._build_broker_url(),
+                "-q", self._queue_name]
+        return self._execute(args)
 
     def _delete_test_queue(self):
         args = ["amqp-delete-queue", "-u", self._build_broker_url(),
