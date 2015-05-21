@@ -100,12 +100,12 @@ class HAPBaseProcedures():
 
 
 class HAPBaseSender:
-    def __init__(self, host, port, queue_name, user_name, user_password, sender_queue):
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, sender_queue):
         self.connector = Factory(RabbitMQConnector)
         self.connector.connect(broaker=host, port=port,vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
                                user_password=user_password)
-        self.queue_name = queue_name
         self.requested_ids = set()
         self.arminfo = haplib.ArmInfo()
         ms_dict = self.get_monitoring_server_info()
@@ -168,15 +168,16 @@ class HAPBaseSender:
     def get_response_and_check_id(request_id):
         # We should set time out in this loop condition.
         while True:
-            response_dict = self.queue.get()
+            response_dict = self.sender_queue.get()
             if request_id == response_dict["id"]:
                 self.requested_ids.remove(request_id)
 
                 return response_dict["result"]
 
 
-class HAPBaseMainPlugin():
-    def __init__(self, host, port, vhost, queue_name, user_name, user_password, main_queue, sender_queue):
+class HAPBaseMainPlugin:
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, main_queue, sender_queue):
         self.connector = Factory(RabbitMQConnector)
         self.connector.connect(broaker=host, port=port,vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
@@ -186,10 +187,10 @@ class HAPBaseMainPlugin():
         self.sender_queue = sender_queue
         self.procedures = HAPBaseProcedures()
         self.procedures_dict = {"exchangeProfile": procedures.hap_exchange_profile,
-                           "fetchItems": procedures.hap_fetch_items,
-                           "fetchHistory": procedures.hap_fetch_history,
-                           "fetchTriggers": procedures.hap_fetch_triggers,
-                           "fetchEvents": procedures.hap_fetch_events}
+                                "fetchItems": procedures.hap_fetch_items,
+                                "fetchHistory": procedures.hap_fetch_history,
+                                "fetchTriggers": procedures.hap_fetch_triggers,
+                                "fetchEvents": procedures.hap_fetch_events}
 
 
     # basic_consume call the following function with arguments.

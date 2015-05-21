@@ -36,9 +36,10 @@ class PreviousHostsInfo:
 
 
 class HAPZabbixProcedures(haplib.HAPBaseProcedures):
-    def __init__(self, host, port, queue_name, user_name, user_password, queue):
-        self.sender = HAPZabbixSender(host, port, queue_name, user_name, user_password, queue)
-
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, queue):
+        self.sender = HAPZabbixSender(host, port, vhost, queue_name,
+                                      user_name, user_password, queue)
 
     def hap_exchange_profile(self, params, request_id):
         haplib.optimize_server_procedures(haplib.SERVER_PROCEDURES, params)
@@ -70,16 +71,19 @@ class HAPZabbixProcedures(haplib.HAPBaseProcedures):
 
 
 class HAPZabbixMainPlugin(haplib.HAPBaseMainPlugin):
-    def __init__(self, host, port, queue_name, user_name, user_password, main_queue, sender_queue):
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, main_queue, sender_queue):
         haplib.HAPBaseMainPlugin.__init__()
-        self.procedures = HAPZabbixProcedures(host, port, "s_"+queue_name, user_name,
-                                    user_password, main_queue)
+        self.procedures = HAPZabbixProcedures(host, port, vhost,
+                                              "m_"+queue_name, user_name,
+                                              user_password, main_queue)
 
 
 class HAPZabbixSender(haplib.HAPBaseSender):
-    def __init__(self, host, port, queue_name, user_name, user_password, queue):
-        haplib.HAPBaseSender.__init__(self, host, port, queue_name, user_name, user_password)
-        self.queue = queue
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, sender_queue):
+        haplib.HAPBaseSender.__init__(self, host, port, vhost, queue_name,
+                                      user_name, user_password)
         self.api = zabbixapi.ZabbixAPI(self.ms_info)
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
@@ -195,9 +199,11 @@ class HAPZabbixSender(haplib.HAPBaseSender):
 
 
 class HAPZabbixPoller:
-    def __init__(self, host, port, queue_name, user_name, user_password, sender_queue):
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, sender_queue):
         self.sender = HAPZabbixSender(host,
                                       port,
+                                      vhost,
                                       "p_"+self.queue_name,
                                       user_name,
                                       user_password,
@@ -235,13 +241,14 @@ class HAPZabbixPoller:
 
 
 class HAPZabbixDaemon:
-    def __init__(self, host, port, queue_name, user_name, user_password):
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password):
         self.host = host
         self.port = port
+        self.vhost = vhost
         self.queue_name = queue_name
         self.user_name = user_name
         self.user_password = user_password
-
 
     def start(self):
         poller_queue = multiprocessing.Queue()
@@ -249,12 +256,14 @@ class HAPZabbixDaemon:
 
         poller = HAPZabbixPoller(self.host,
                                  self.port,
+                                 self.vhost,
                                  self.queue_name,
                                  self.user_name,
                                  self.user_password,
                                  poller_queue)
         main_plugin = HAPZabbixMainPlugin(self.host,
                                           self.port,
+                                          self.vhost,
                                           self.queue_name,
                                           self.user_name,
                                           self.user_password,
@@ -303,6 +312,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with daemon.DaemonContext():
-        hap_zabbix_daemon = HAPZabbixDaemon(args.host, args.port, args.queue_name,
-                                            args.user_name, args.user_password)
+        hap_zabbix_daemon = HAPZabbixDaemon(args.host, args.port, args.vhost,
+                                            args.queue_name, args.user_name,
+                                            args.user_password)
         hap_zabbix_daemon.start()
