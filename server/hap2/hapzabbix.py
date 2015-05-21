@@ -35,44 +35,44 @@ class PreviousHostsInfo:
         self.host_group_membeship = list()
 
 
-class HAPZabbixHandlerProcedures(haplib.HAPBaseHandlerProcedures):
+class HAPZabbixProcedures(haplib.HAPBaseProcedures):
     def __init__(self, host, port, queue_name, user_name, user_password, queue):
-        self.sender.g = HAPZabbixSender(host, port, queue_name, user_name, user_password, queue)
+        self.sender = HAPZabbixSender(host, port, queue_name, user_name, user_password, queue)
 
 
     def hap_exchange_profile(self, params, request_id):
         haplib.optimize_server_procedures(haplib.SERVER_PROCEDURES, params)
         #ToDo Implement get_implement_procedures
         my_procedures = haplib.get_implement_procedures()
-        self.sender.g.exchange_profile(my_procedures, request_id)
+        self.sender.exchange_profile(my_procedures, request_id)
 
 
     def hap_fetch_items(self, params, request_id):
-        self.sender.g.send_response_to_queue("SUCCESS", request_id)
-        self.sender.g.put_items(params["hostId"], params["fetchId"])
+        self.sender.send_response_to_queue("SUCCESS", request_id)
+        self.sender.put_items(params["hostId"], params["fetchId"])
 
 
     def hap_fetch_history(self, params, request_id):
-        self.sender.g.send_response_to_queue("SUCCESS", request_id)
-        self.sender.g.put_history(params["itemId"], params["fetchId"])
+        self.sender.send_response_to_queue("SUCCESS", request_id)
+        self.sender.put_history(params["itemId"], params["fetchId"])
 
 
     def hap_fetch_triggers(self, params, request_id):
-        self.sender.g.send_response_to_queue("SUCCESS", request_id)
-        self.sender.g.update_triggers(params["lastChangeTime"], params["hostId"],
+        self.sender.send_response_to_queue("SUCCESS", request_id)
+        self.sender.update_triggers(params["lastChangeTime"], params["hostId"],
                                  params["fetchId"])
 
 
     def hap_fetch_events(self, params, request_id):
-        self.sender.g.send_response_to_queue("SUCCESS", request_id)
-        self.sender.g.update_events(params["lastInfo"], params["count"],
+        self.sender.send_response_to_queue("SUCCESS", request_id)
+        self.sender.update_events(params["lastInfo"], params["count"],
                                  params["direction"], params["fetchId"])
 
 
 class HAPZabbixReceiver(haplib.HAPBaseReceiver):
     def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
         haplib.HAPBaseReceiver.__init__()
-        self.procedures = HAPZabbixHandlerProcedures(host, port, "s_"+queue_name, user_name,
+        self.procedures = HAPZabbixProcedures(host, port, "s_"+queue_name, user_name,
                                     user_password, receiver_queue)
 
 
