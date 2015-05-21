@@ -244,50 +244,28 @@ class HAPZabbixDaemon:
 
 
     def start(self):
-        publisher_queue = multiprocessing.Queue()
-        consumer_queue = multiprocessing.Queue()
-        consumer = HAPZabbixRabbitMQConsumer(self.host,
-                                             self.port,
-                                             self.queue_name,
-                                             self.user_name,
-                                             self.user_password,
-                                             consumer_queue,
-                                             publisher_queue)
+        poller_queue = multiprocessing.Queue()
+        receiver_queue = multiprocessing.Queue()
 
-        subprocess = multiprocessing.Process(target=poll, args=(publisher_queue,))
+        poller = HAPZabbixPoller(self.host,
+                                 self.port,
+                                 self.queue_name,
+                                 self.user_name,
+                                 self.user_password,
+                                 poller_queue)
+        receiver = HAPZabbixReceiver(self.host,
+                                     self.port,
+                                     self.queue_name,
+                                     self.user_name,
+                                     self.user_password,
+                                     receiver_queue,
+                                     poller_queue)
+
+        subprocess = multiprocessing.Process(target=poller.poll)
         subprocess.daemon = True
         subprocess.start()
 
-        consumer.start_receiving()
-
-
-    def poll(self, publisher_queue):
-        publisher = HAPZabbixRabbitMQPublisher(self.host,
-                                               self.port,
-                                               "p_"+self.queue_name,
-                                               self.user_name,
-                                               self.user_password,
-                                               publisher_queue)
-        arm_info = haplib.ArmInfo()
-
-        while True:
-            sleep_time = publisher.ms_info.interval_sec
-            try:
-                publisher.routine_update()
-                arm_info.last_status = "OK"
-                arm_info.failure_reason = ""
-                arm_info.last_success_time = haplib.get_current_hatohol_time()
-                arm_info.num_success += 1
-            except:
-                sleep_time = publisher.ms_info.retry_interval_sec
-                arm_info.last_status = "NG"
-                #ToDo Think about how to input failure_reason
-                # arm_info.failure_reason = ""
-                arm_info.failure_time = haplib.get_current_hatohol_time()
-                arm_info.num_failure += 1
-
-            publisher.update_arm_info(arm_info)
-            time.sleep(sleep_time)
+        receiver.start_receiving()
 
 
 if __name__ == '__main__':
