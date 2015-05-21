@@ -181,10 +181,10 @@ class HAPBaseSender:
 
 
 class HAPBaseMainPlugin():
-    def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
+    def __init__(self, host, port, queue_name, user_name, user_password, main_queue, sender_queue):
         self.connector = RabbitMQConnector(host, port, queue_name,
                                            user_name, user_password)
-        self.receiver_queue = receiver_queue
+        self.main_queue = main_queue
         self.sender_queue = sender_queue
         self.procedures = HAPBaseProcedures()
         self.procedures_dict = {"exchangeProfile": procedures.hap_exchange_profile,
@@ -206,7 +206,7 @@ class HAPBaseMainPlugin():
                                                      valid_request["id"])
         except KeyError:
             if valid_request["id"] in sender.requested_ids:
-                self.receiver_queue.put(valid_request)
+                self.main_queue.put(valid_request)
             else:
                 self.sender_queue.put(valid_request)
 

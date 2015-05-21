@@ -70,10 +70,10 @@ class HAPZabbixProcedures(haplib.HAPBaseProcedures):
 
 
 class HAPZabbixMainPlugin(haplib.HAPBaseMainPlugin):
-    def __init__(self, host, port, queue_name, user_name, user_password, receiver_queue, sender_queue):
+    def __init__(self, host, port, queue_name, user_name, user_password, main_queue, sender_queue):
         haplib.HAPBaseMainPlugin.__init__()
         self.procedures = HAPZabbixProcedures(host, port, "s_"+queue_name, user_name,
-                                    user_password, receiver_queue)
+                                    user_password, main_queue)
 
 
 class HAPZabbixSender(haplib.HAPBaseSender):
@@ -245,7 +245,7 @@ class HAPZabbixDaemon:
 
     def start(self):
         poller_queue = multiprocessing.Queue()
-        receiver_queue = multiprocessing.Queue()
+        main_queue = multiprocessing.Queue()
 
         poller = HAPZabbixPoller(self.host,
                                  self.port,
@@ -253,19 +253,19 @@ class HAPZabbixDaemon:
                                  self.user_name,
                                  self.user_password,
                                  poller_queue)
-        receiver = HAPZabbixMainPlugin(self.host,
-                                     self.port,
-                                     self.queue_name,
-                                     self.user_name,
-                                     self.user_password,
-                                     receiver_queue,
-                                     poller_queue)
+        main_plugin = HAPZabbixMainPlugin(self.host,
+                                          self.port,
+                                          self.queue_name,
+                                          self.user_name,
+                                          self.user_password,
+                                          main_queue,
+                                          poller_queue)
 
         subprocess = multiprocessing.Process(target=poller.poll)
         subprocess.daemon = True
         subprocess.start()
 
-        receiver.start_receiving()
+        main_plugin.start_receiving()
 
 
 if __name__ == '__main__':
