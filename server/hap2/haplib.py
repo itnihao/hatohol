@@ -42,19 +42,6 @@ SERVER_PROCEDURES = {"exchangeProfile": True,
                      "updateHostParent": True,
                      "updateArmInfo": True}
 
-
-def get_error_dict():
-    error_dict = {-32700: "Parse error", -32600: "invalid Request",
-                  -32601: "Method not found", -32602: "invalid params",
-                  -32603: "Internal error"}
-    for num in range(-32000, -32100):
-        error_dict[str(num)] = "Server error"
-
-    return error_dict
-
-
-ERROR_DICT = get_error_dict()
-
 class MonitoringServerInfo:
     def __init__(self, ms_info_dict):
         self.server_id = ms_info_dict["serverId"]
@@ -78,32 +65,17 @@ class ArmInfo:
         self.num_failure = int()
 
 
-class HAPBaseProcedures():
-    def hap_exchange_profile(self, params, request_id):
-        pass
-
-    def hap_fetch_items(self, params, request_id):
-        pass
-
-    def hap_fetch_history(self, params, request_id):
-        pass
-
-    def hap_fetch_triggers(self, params, request_id):
-        pass
-
-    def hap_fetch_events(self, params, request_id):
-        pass
-
-
 class HAPBaseSender:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, sender_queue):
+                 user_password, sender_queue, requested_ids):
+        # Currentory, RabbitMQConnector only.
+        #I want to add way of select connection to use argument.
         self.connector = Factory.create(RabbitMQConnector)
         self.connector.connect(broker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
                                password=user_password)
         self.sender_queue = sender_queue
-        self.requested_ids = set()
+        self.requested_ids = requested_ids
         ms_dict = self.get_monitoring_server_info()
         self.ms_info = MonitoringServerInfo(ms_dict)
 
@@ -167,56 +139,94 @@ class HAPBaseSender:
                 return response_dict["result"]
 
 
-class HAPBaseMainPlugin:
+class HAPBaseReceiver:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, main_queue, sender_queue):
-        self.connector = Factory(RabbitMQConnector)
-        self.connector.connect(broaker=host, port=port, vhost=vhost,
+                 user_password, poller_queue, poller_requested_ids,
+                 main_request_queue, main_response_queue, main_requested_ids):
+        self.main_request_queue = main_request_queue
+        self.main_response_queue = main_response_queue
+        self.main_requested_ids = main_requested_ids
+        self.poller_queue = poller_queue
+        self.poller_requested_ids = poller_requested_ids
+
+        self.connector = Factory.create(RabbitMQConnector)
+        self.connector.connect(broker=host, port=port, vhost=vhost,
                                queue_name=queue_name, user_name=user_name,
-                               user_password=user_password)
-        self.connector.set_receiver(self.callback_handler)
-        self.main_queue = main_queue
-        self.sender_queue = sender_queue
-        self.procedures = HAPBaseProcedures()
-        self.procedures_dict = {"exchangeProfile": procedures.hap_exchange_profile,
-                                "fetchItems": procedures.hap_fetch_items,
-                                "fetchHistory": procedures.hap_fetch_history,
-                                "fetchTriggers": procedures.hap_fetch_triggers,
-                                "fetchEvents": procedures.hap_fetch_events}
+                               password=user_password)
+        self.connector.set_receiver(self.message_manager)
 
     # basic_consume call the following function with arguments.
     # But I don't use other than body.
-    def callback_handler(self, ch, body):
-        valid_request = check_request(body)
+    def message_manager(self, ch, body):
+        valid_request = self.check_request(body)
         if valid_request is None:
             return
 
         try:
-            self.procedures[valid_request["method"]](valid_request["params"],
-                                                     valid_request["id"])
-        except KeyError:
-            if valid_request["id"] in sender.requested_ids:
-                self.main_queue.put(valid_request)
+            if valid_request["id"] in self.poller_requested_ids:
+                self.poller_queue.put(valid_request)
+            elif valid_request["id"] in self.main_requested_ids:
+                self.main_response_queue.put(valid_request)
             else:
-                self.sender_queue.put(valid_request)
+                self.main_request_queue.put(valid_request)
+        except KeyError:
+            #The following sentence is used in case of receive notification.
+            self.main_request_queue.put(valid_request)
 
+    #ToDo Fix the following method
     def check_request(self, request_str):
         request_dict = HAPUtils.convert_string_to_dict(request_str)
-        if not isinstance(request_dict, dict):
-            self.sender.send_json_to_que(create_error_json(request_dict))
-            return
-
-        result = check_implement_method(request_dict["method"])
-        if result is not None:
-            send_json_to_que(create_error_json(result, request_dict["id"]))
-            return
-
-        result = HAPUtils.check_argument_is_correct(request_dict["method"])
-        if result is not None:
-            send_json_to_que(create_error_json(result, request_dict["id"]))
-            return
+#        if not isinstance(request_dict, dict):
+#            self.sender.send_json_to_que(create_error_json(request_dict))
+#            return
+#
+#        result = check_implement_method(request_dict["method"])
+#        if result is not None:
+#            send_json_to_que(create_error_json(result, request_dict["id"]))
+#            return
+#
+#        result = HAPUtils.check_argument_is_correct(request_dict["method"])
+#        if result is not None:
+#            send_json_to_que(create_error_json(result, request_dict["id"]))
+#            return
 
         return request_dict
+
+
+class HAPBaseMainPlugin:
+    def __init__(self, main_request_queue):
+        self.main_request_queue = main_request_queue
+        self.procedures = {"exchangeProfile": self.hap_exchange_profile,
+                           "fetchItems": self.hap_fetch_items,
+                           "fetchHistory": self.hap_fetch_history,
+                           "fetchTriggers": self.hap_fetch_triggers,
+                           "fetchEvents": self.hap_fetch_events}
+
+    def hap_exchange_profile(self, params, request_id):
+        pass
+
+    def hap_fetch_items(self, params, request_id):
+        pass
+
+    def hap_fetch_history(self, params, request_id):
+        pass
+
+    def hap_fetch_triggers(self, params, request_id):
+        pass
+
+    def hap_fetch_events(self, params, request_id):
+        pass
+
+    def get_request_roop(self):
+        while True:
+            request = self.main_request_queue.get()
+            try:
+                self.procedures[request["method"]](request["params"],
+                                                   request["id"])
+            except KeyError:
+                #The following sentense is used in case of receive notification
+                # from Hatohol server. 
+                self.procedures[request["method"]](request["params"])
 
 
 class HAPUtils:
@@ -290,3 +300,17 @@ class HAPUtils:
     def get_current_hatohol_time():
         unix_time = float(time.mktime(datetime.now().utctimetuple()))
         return translate_unix_time_to_hatohol_time(unix_time)
+
+    @staticmethod
+    def get_error_dict():
+        error_dict = {-32700: "Parse error", -32600: "invalid Request",
+                      -32601: "Method not found", -32602: "invalid params",
+                      -32603: "Internal error"}
+        for num in range(-32000, -32100):
+            error_dict[str(num)] = "Server error"
+    
+        return error_dict
+
+
+ERROR_DICT = HAPUtils.get_error_dict()
+

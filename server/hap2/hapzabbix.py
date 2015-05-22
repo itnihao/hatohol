@@ -25,8 +25,8 @@ import multiprocessing
 import argparse
 import time
 
-from haplib import HAPUtils, HAPBaseProcedures, HAPBaseSender,				\
-                   HAPBaseMainPlugin, ArmInfo, ERROR_DICT, SERVER_PROCEDURES
+from haplib import HAPUtils, HAPBaseSender,HAPBaseReceiver, HAPBaseMainPlugin,\
+                   ArmInfo, ERROR_DICT, SERVER_PROCEDURES
 import zabbixapi
 
 class PreviousHostsInfo:
@@ -36,11 +36,12 @@ class PreviousHostsInfo:
         self.host_group_membeship = list()
 
 
-class HAPZabbixProcedures(HAPBaseProcedures):
+class HAPZabbixMainPlugin(HAPBaseMainPlugin):
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, queue):
-        self.sender = HAPZabbixSender(host, port, vhost, queue_name,
-                                      user_name, user_password, queue)
+                 user_password, main_request_queue, main_response_queue):
+        HAPBaseMainPlugin.__init__(self)
+        self.sender = HAPZabbixSender(host, port, vhost, queue_name, user_name,
+                                      user_password, main_response_queue)
 
     def hap_exchange_profile(self, params, request_id):
         HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
@@ -67,20 +68,11 @@ class HAPZabbixProcedures(HAPBaseProcedures):
                                   params["direction"], params["fetchId"])
 
 
-class HAPZabbixMainPlugin(HAPBaseMainPlugin):
-    def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, main_queue, sender_queue):
-        HAPBaseMainPlugin.__init__()
-        self.procedures = HAPZabbixProcedures(host, port, vhost,
-                                              "m_"+queue_name, user_name,
-                                              user_password, main_queue)
-
-
 class HAPZabbixSender(HAPBaseSender):
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, sender_queue):
-        HAPBaseSender.__init__(self, host, port, vhost, queue_name,
-                                      user_name, user_password, sender_queue)
+                 user_password, sender_queue, requested_ids):
+        HAPBaseSender.__init__(self, host, port, vhost, queue_name, user_name,
+                               user_password, sender_queue, requested_ids)
         self.api = zabbixapi.ZabbixAPI(self.ms_info)
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
@@ -197,14 +189,15 @@ class HAPZabbixSender(HAPBaseSender):
 
 class HAPZabbixPoller:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, sender_queue):
+                 user_password, poller_queue, poller_requested_ids):
         self.sender = HAPZabbixSender(host,
                                       port,
                                       vhost,
-                                      "p_"+queue_name,
+                                      queue_name,
                                       user_name,
                                       user_password,
-                                      sender_queue)
+                                      poller_queue,
+                                      poller_requested_ids)
 
     def update_lump(self):
         self.sender.put_items()
@@ -247,29 +240,51 @@ class HAPZabbixDaemon:
 
     def start(self):
         poller_queue = multiprocessing.Queue()
-        main_queue = multiprocessing.Queue()
+        poller_requested_ids = set()
+        main_request_queue = multiprocessing.Queue()
+        main_response_queue = multiprocessing.Queue()
+        main_requested_ids = set()
+
+        receiver = HAPBaseReceiver(self.host,
+                                   self.port,
+                                   self.vhost,
+                                   "r_"+self.queue_name,
+                                   self.user_name,
+                                   self.user_password,
+                                   poller_queue,
+                                   poller_requested_ids,
+                                   main_request_queue,
+                                   main_response_queue,
+                                   main_requested_ids)
+
+        receive_process =													\
+            multiprocessing.Process(target=receiver.connector.run_receive_loop)
+        receive_process.daemon = True
+        receive_process.start()
 
         poller = HAPZabbixPoller(self.host,
                                  self.port,
                                  self.vhost,
-                                 self.queue_name,
+                                 "s_"+self.queue_name,
                                  self.user_name,
                                  self.user_password,
-                                 poller_queue)
+                                 poller_queue,
+                                 poller_requested_ids)
         main_plugin = HAPZabbixMainPlugin(self.host,
                                           self.port,
                                           self.vhost,
-                                          self.queue_name,
+                                          "s_"+self.queue_name,
                                           self.user_name,
                                           self.user_password,
-                                          main_queue,
-                                          poller_queue)
+                                          main_request_queue,
+                                          main_response_queue,
+                                          main_requested_ids)
 
-        subprocess = multiprocessing.Process(target=poller.poll)
-        subprocess.daemon = True
-        subprocess.start()
+        poll_process = multiprocessing.Process(target=poller.poll)
+#       poll_process.daemon = True
+        poll_process.start()
 
-        main_plugin.connector.run_receive_loop()
+        main_plugin.get_request_loop()
 
 
 if __name__ == '__main__':
@@ -306,8 +321,8 @@ if __name__ == '__main__':
                         help="RabbitMQ queue")
     args = parser.parse_args()
 
-    with daemon.DaemonContext():
-        hap_zabbix_daemon = HAPZabbixDaemon(args.host, args.port, args.vhost,
+    #with daemon.DaemonContext():
+    hap_zabbix_daemon = HAPZabbixDaemon(args.host, args.port, args.vhost,
                                             args.queue_name, args.user_name,
                                             args.user_password)
-        hap_zabbix_daemon.start()
+    hap_zabbix_daemon.start()
