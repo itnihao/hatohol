@@ -33,7 +33,7 @@ class ZabbixAPI:
     def __init__(self, monitoring_server_info):
         self.url = monitoring_server_info.url
         self.auth_token = self.get_auth_token(monitoring_server_info.user_name,
-                                              monitoring_server_info.user_passwd)
+                                              monitoring_server_info.password)
         self.api_version = self.get_api_version()
 
     def get_auth_token(self, user_name, user_passwd):
