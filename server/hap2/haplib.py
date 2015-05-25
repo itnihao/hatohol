@@ -23,8 +23,9 @@ import json
 from datetime import datetime
 import time
 import pika
-import multiprocessing
 import random
+import Queue
+import logging
 
 from transporter import Factory
 from rabbitmqconnector import RabbitMQConnector
