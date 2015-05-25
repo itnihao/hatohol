@@ -277,10 +277,10 @@ class HAPZabbixDaemon:
                                           self.user_password,
                                           main_request_queue,
                                           main_response_queue,
-                                          main_requested_ids)
+                                          poller.sender.ms_info)
 
         poll_process = multiprocessing.Process(target=poller.poll)
-#       poll_process.daemon = True
+        poll_process.daemon = True
         poll_process.start()
 
         main_plugin.get_request_loop()
