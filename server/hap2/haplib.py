@@ -86,6 +86,7 @@ class HAPBaseSender:
     def send_request_to_queue(self, procedure_name, params, request_id):
         request = json.dumps({"jsonrpc": "2.0", "method": procedure_name,
                               "params": params, "id": request_id})
+        self.sender_queue.put(self.requested_ids)
         self.connector.call(request)
 
     def send_response_to_queue(self, result, response_id):
@@ -134,9 +135,15 @@ class HAPBaseSender:
         self.get_response_and_check_id(request_id)
 
     def get_response_and_check_id(self, request_id):
-        # We should set time out in this loop condition.
         while True:
-            response_dict = self.sender_queue.get()
+            try:
+                self.sender_queue.join()
+                response_dict = self.sender_queue.get(True, 30)
+                self.sender_queue.task_done()
+            except Queue.Empty:
+                self.requested_ids.remove(request_id)
+                logging.error("Request failed")
+
             if request_id == response_dict["id"]:
                 self.requested_ids.remove(request_id)
 
@@ -145,13 +152,13 @@ class HAPBaseSender:
 
 class HAPBaseReceiver:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, poller_queue, poller_requested_ids,
-                 main_request_queue, main_response_queue, main_requested_ids):
+                 user_password, poller_queue, main_request_queue,
+                 main_response_queue):
         self.main_request_queue = main_request_queue
         self.main_response_queue = main_response_queue
-        self.main_requested_ids = main_requested_ids
         self.poller_queue = poller_queue
-        self.poller_requested_ids = poller_requested_ids
+        self.main_requested_ids = set()
+        self.poller_requested_ids = set()
 
         self.connector = Factory.create(RabbitMQConnector)
         self.connector.connect(broker=host, port=port, vhost=vhost,
@@ -159,12 +166,24 @@ class HAPBaseReceiver:
                                password=user_password)
         self.connector.set_receiver(self.message_manager)
 
-    # basic_consume call the following function with arguments.
-    # But I don't use other than body.
     def message_manager(self, ch, body):
         valid_request = self.check_request(body)
         if valid_request is None:
             return
+
+        try:
+            self.poller_requested_ids = self.poller_queue.get(False)
+            self.poller_queue.task_done()
+        except Queue.Empty:
+            #ToDo print to logging
+            pass
+
+        try:
+            self.main_requested_ids = self.main_response_queue.get(False)
+            self.main_requested_ids.task_done()
+        except Queue.Empty:
+            #ToDo print to logging
+            pass
 
         try:
             if valid_request["id"] in self.poller_requested_ids:

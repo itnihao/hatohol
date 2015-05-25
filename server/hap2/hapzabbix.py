@@ -192,15 +192,14 @@ class HAPZabbixSender(HAPBaseSender):
 
 class HAPZabbixPoller:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, poller_queue, poller_requested_ids):
+                 user_password, poller_queue):
         self.sender = HAPZabbixSender(host,
                                       port,
                                       vhost,
                                       queue_name,
                                       user_name,
                                       user_password,
-                                      poller_queue,
-                                      poller_requested_ids)
+                                      poller_queue)
 
     def update_lump(self):
         self.sender.put_items()
@@ -255,10 +254,8 @@ class HAPZabbixDaemon:
                                    self.user_name,
                                    self.user_password,
                                    poller_queue,
-                                   poller_requested_ids,
                                    main_request_queue,
-                                   main_response_queue,
-                                   main_requested_ids)
+                                   main_response_queue)
 
         receive_process =													\
             multiprocessing.Process(target=receiver.connector.run_receive_loop)
@@ -271,8 +268,7 @@ class HAPZabbixDaemon:
                                  "s_"+self.queue_name,
                                  self.user_name,
                                  self.user_password,
-                                 poller_queue,
-                                 poller_requested_ids)
+                                 poller_queue)
         main_plugin = HAPZabbixMainPlugin(self.host,
                                           self.port,
                                           self.vhost,
