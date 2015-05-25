@@ -90,8 +90,8 @@ class HAPBaseSender:
 
     def send_response_to_queue(self, result, response_id):
         response = json.dumps({"jsonrpc": "2.0", "result": result,
-                               "id": request_id})
-        self.connector.reply(request)
+                               "id": response_id})
+        self.connector.reply(result)
 
     def send_error_to_queue(self, error_code, response_id):
         response = json.dumps({"jsonrpc": "2.0",
@@ -221,7 +221,7 @@ class HAPBaseMainPlugin:
     def hap_fetch_events(self, params, request_id):
         pass
 
-    def get_request_roop(self):
+    def get_request_loop(self):
         while True:
             request = self.main_request_queue.get()
             try:
@@ -303,7 +303,7 @@ class HAPUtils:
     @staticmethod
     def get_current_hatohol_time():
         unix_time = float(time.mktime(datetime.now().utctimetuple()))
-        return translate_unix_time_to_hatohol_time(unix_time)
+        return HAPUtils.translate_unix_time_to_hatohol_time(unix_time)
 
     @staticmethod
     def get_error_dict():

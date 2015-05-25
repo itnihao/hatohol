@@ -31,7 +31,7 @@ from haplib import HAPUtils, HAPBaseSender,HAPBaseReceiver, HAPBaseMainPlugin,\
 import zabbixapi
 
 class PreviousHostsInfo:
-    def __init__():
+    def __init__(self):
         self.hosts = list()
         self.host_groups = list()
         self.host_group_membeship = list()
@@ -105,22 +105,22 @@ class HAPZabbixSender(HAPBaseSender):
         hosts, hg_membership = self.api.get_hosts()
 
         hosts.sort()
-        if self.previous_hosts != hosts:
+        if self.previous_hosts_info.hosts != hosts:
             hosts_params = {"updateType": "ALL", "hosts": hosts}
             request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
-            self.send_request_to_queue("updateHosts", params, request_id)
+            self.send_request_to_queue("updateHosts", hosts_params, request_id)
             self.get_response_and_check_id(request_id)
-            self.previous_hosts = hosts
+            self.previous_hosts_info.hosts = hosts
 
         hg_membership.sort()
-        if self.previous_host_group_membership != hg_membership:
+        if self.previous_hosts_info.host_group_membership != hg_membership:
             hg_membership_params = {"updateType": "ALL",
                                     "hostGroupMembership": hg_membership}
             request_id = HAPUtils.get_and_save_request_id(self.requested_ids)
-            self.send_request_to_queue("updateHostGroupMembership", params,
-                                       request_id)
+            self.send_request_to_queue("updateHostGroupMembership",
+                                       hg_membership_params, request_id)
             self.get_response_and_check_id(request_id)
-            self.previous_host_group_membership = hg_membership
+            self.previous_hosts_info.host_group_membership = hg_membership
 
     def update_host_groups(self):
         host_groups = api.get_host_groups()
@@ -212,7 +212,7 @@ class HAPZabbixPoller:
     def poll(self):
         arm_info = ArmInfo()
         while True:
-            sleep_time = sender.ms_info.interval_sec
+            sleep_time = self.sender.ms_info.polling_interval_sec
             try:
                 self.update_lump()
                 arm_info.last_status = "OK"
@@ -220,14 +220,14 @@ class HAPZabbixPoller:
                 arm_info.last_success_time = HAPUtils.get_current_hatohol_time()
                 arm_info.num_success += 1
             except:
-                sleep_time = sender.ms_info.retry_interval_sec
+                sleep_time = self.sender.ms_info.retry_interval_sec
                 arm_info.last_status = "NG"
                 #ToDo Think about how to input failure_reason
                 # arm_info.failure_reason = ""
                 arm_info.failure_time = HAPUtils.get_current_hatohol_time()
                 arm_info.num_failure += 1
 
-            sender.update_arm_info(arm_info)
+            self.sender.update_arm_info(arm_info)
             time.sleep(sleep_time)
 
 
