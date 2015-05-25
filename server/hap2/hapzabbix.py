@@ -241,10 +241,10 @@ class HAPZabbixDaemon:
         self.user_password = user_password
 
     def start(self):
-        poller_queue = multiprocessing.Queue()
+        poller_queue = multiprocessing.JoinableQueue()
         poller_requested_ids = set()
-        main_request_queue = multiprocessing.Queue()
-        main_response_queue = multiprocessing.Queue()
+        main_request_queue = multiprocessing.JoinableQueue()
+        main_response_queue = multiprocessing.JoinableQueue()
         main_requested_ids = set()
 
         receiver = HAPBaseReceiver(self.host,
