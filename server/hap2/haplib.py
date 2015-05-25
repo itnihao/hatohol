@@ -68,7 +68,7 @@ class ArmInfo:
 
 class HAPBaseSender:
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, sender_queue, requested_ids):
+                 user_password, sender_queue, ms_info=None):
         # Currentory, RabbitMQConnector only.
         #I want to add way of select connection to use argument.
         self.connector = Factory.create(RabbitMQConnector)
@@ -76,9 +76,12 @@ class HAPBaseSender:
                                queue_name=queue_name, user_name=user_name,
                                password=user_password)
         self.sender_queue = sender_queue
-        self.requested_ids = requested_ids
-        ms_dict = self.get_monitoring_server_info()
-        self.ms_info = MonitoringServerInfo(ms_dict)
+        self.requested_ids = set()
+        if ms_info is None:
+            ms_dict = self.get_monitoring_server_info()
+            self.ms_info = MonitoringServerInfo(ms_dict)
+        else:
+            self.ms_info = ms_info
 
     def send_request_to_queue(self, procedure_name, params, request_id):
         request = json.dumps({"jsonrpc": "2.0", "method": procedure_name,

@@ -39,10 +39,12 @@ class PreviousHostsInfo:
 
 class HAPZabbixMainPlugin(HAPBaseMainPlugin):
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, main_request_queue, main_response_queue):
-        HAPBaseMainPlugin.__init__(self)
+                 user_password, main_request_queue, main_response_queue,
+                 ms_info=None):
+        HAPBaseMainPlugin.__init__(self, main_request_queue)
         self.sender = HAPZabbixSender(host, port, vhost, queue_name, user_name,
-                                      user_password, main_response_queue)
+                                      user_password, main_response_queue,
+                                      ms_info)
 
     def hap_exchange_profile(self, params, request_id):
         HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
@@ -71,9 +73,9 @@ class HAPZabbixMainPlugin(HAPBaseMainPlugin):
 
 class HAPZabbixSender(HAPBaseSender):
     def __init__(self, host, port, vhost, queue_name, user_name,
-                 user_password, sender_queue, requested_ids):
+                 user_password, sender_queue, ms_info=None):
         HAPBaseSender.__init__(self, host, port, vhost, queue_name, user_name,
-                               user_password, sender_queue, requested_ids)
+                               user_password, sender_queue, ms_info)
         self.api = zabbixapi.ZabbixAPI(self.ms_info)
         self.previous_hosts_info = PreviousHostsInfo()
         self.trigger_last_info = None
