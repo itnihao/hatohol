@@ -25,7 +25,7 @@ from transporter import Transporter
 class RabbitMQConnector(Transporter):
 
     def __init__(self):
-        #Transporter.__init__(self)
+        Transporter.__init__(self)
         self._channel = None
 
     def connect(self, broker, port, vhost, queue_name, user_name, password):
