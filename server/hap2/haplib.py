@@ -315,7 +315,7 @@ class HAPUtils:
         last_info = None
         for target_dict in target_array:
             if last_info < target_dict[last_info_name]:
-                    last_info == target_dict[last_info_name]
+                    last_info = target_dict[last_info_name]
 
         return last_info
 

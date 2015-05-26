@@ -255,15 +255,6 @@ class ZabbixAPI:
         return json.loads(res_str)
 
 
-def get_last_info_from_array_dict(value_name, array_dict):
-    last_info = None
-    for each_dict in array_dict:
-        if last_info < each_dict[value_name]:
-            last_info = each_dict[value_name]
-
-    return last_info
-
-
 def get_item_groups(applications):
     item_groups = list()
     for application in applications:
