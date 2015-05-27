@@ -125,3 +125,12 @@ class ConnectorForTest:
 
     def set_receiver(func):
         return
+
+
+class ReceiverForTest(haplib.HAPBaseReceiver):
+
+    def __init__(self):
+        self.main_response_queue = multiprocessing.JoinableQueue()
+        self.poller_queue = multiprocessing.JoinableQueue()
+        self.main_requested_ids = set()
+        self.poller_requested_ids = set()
