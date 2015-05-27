@@ -144,10 +144,19 @@ class HAPBaseSender:
                 self.requested_ids.remove(request_id)
 
                 return response_dict["result"]
+        except ValueError as exception:
+            if exception == "task_done() called too many times" and          \
+                                            request_id == response_dict["id"]:
+                self.requested_ids.remove(request_id)
+
+                return response_dict["result"]
+            else:
+                return
         except Queue.Empty:
             self.requested_ids.remove(request_id)
             logging.error("Request failed")
             return
+
 
 
 class HAPBaseReceiver:
