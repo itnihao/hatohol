@@ -220,6 +220,9 @@ class HAPBaseMainPlugin:
                            "fetchHistory": self.hap_fetch_history,
                            "fetchTriggers": self.hap_fetch_triggers,
                            "fetchEvents": self.hap_fetch_events}
+        #ToDo Currently, implement_method is fixed.
+        # I want to get its dynamically to to use function.
+        self.implement_procedures = ["exchengeProfile"]
 
     def hap_exchange_profile(self, params, request_id):
         HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
@@ -306,12 +309,11 @@ class HAPUtils:
             return (None, json_dict)
 
     @staticmethod
-    def check_method_is_implemented(method_name):
-        for method in get_implement_methods():
-            if method_name == method:
-                return "IMPLEMENT"
-            else:
-                return -32601
+    def check_procedure_is_implemented(procedure_name, implement_procedures):
+        if procedures_name in implement_procedures:
+            return
+        else:
+            return -32601
 
     @staticmethod
     def check_argument_is_correct(json_dict):
