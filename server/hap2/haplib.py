@@ -222,7 +222,8 @@ class HAPBaseMainPlugin:
                            "fetchEvents": self.hap_fetch_events}
 
     def hap_exchange_profile(self, params, request_id):
-        pass
+        HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
+        self.sender.exchange_profile(self.implement_procedures, request_id)
 
     def hap_fetch_items(self, params, request_id):
         pass

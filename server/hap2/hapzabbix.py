@@ -46,12 +46,6 @@ class HAPZabbixMainPlugin(HAPBaseMainPlugin):
                                       user_password, main_response_queue,
                                       ms_info)
 
-    def hap_exchange_profile(self, params, request_id):
-        HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
-        #ToDo Implement get_implement_procedures
-        my_procedures = HAPUtils.get_implement_procedures()
-        self.sender.exchange_profile(my_procedures, request_id)
-
     def hap_fetch_items(self, params, request_id):
         self.sender.send_response_to_queue("SUCCESS", request_id)
         self.sender.put_items(params["hostId"], params["fetchId"])
