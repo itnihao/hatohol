@@ -135,19 +135,19 @@ class HAPBaseSender:
         self.get_response_and_check_id(request_id)
 
     def get_response_and_check_id(self, request_id):
-        while True:
-            try:
-                self.sender_queue.join()
-                response_dict = self.sender_queue.get(True, 30)
-                self.sender_queue.task_done()
-            except Queue.Empty:
-                self.requested_ids.remove(request_id)
-                logging.error("Request failed")
+        try:
+            self.sender_queue.join()
+            response_dict = self.sender_queue.get(True, 30)
+            self.sender_queue.task_done()
 
             if request_id == response_dict["id"]:
                 self.requested_ids.remove(request_id)
 
                 return response_dict["result"]
+        except Queue.Empty:
+            self.requested_ids.remove(request_id)
+            logging.error("Request failed")
+            return
 
 
 class HAPBaseReceiver:
