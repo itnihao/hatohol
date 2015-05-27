@@ -22,7 +22,7 @@ import multiprocessing
 import haplib
 from haplib import HAPUtils
 
-class TestHAPBaseSender(unittest.TestCase):
+class TestHaplib(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
