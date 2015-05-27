@@ -207,25 +207,6 @@ class HAPBaseReceiver:
             #The following sentence is used in case of receive notification.
             self.main_request_queue.put(valid_request)
 
-    #ToDo Fix the following method
-    def check_request(self, request_str):
-        request_dict = HAPUtils.convert_string_to_dict(request_str)
-#        if not isinstance(request_dict, dict):
-#            self.sender.send_json_to_que(create_error_json(request_dict))
-#            return
-#
-#        result = check_implement_method(request_dict["method"])
-#        if result is not None:
-#            send_json_to_que(create_error_json(result, request_dict["id"]))
-#            return
-#
-#        result = HAPUtils.check_argument_is_correct(request_dict["method"])
-#        if result is not None:
-#            send_json_to_que(create_error_json(result, request_dict["id"]))
-#            return
-
-        return request_dict
-
 
 class HAPBaseMainPlugin:
     def __init__(self, main_request_queue):
@@ -264,6 +245,37 @@ class HAPBaseMainPlugin:
 
 
 class HAPUtils:
+
+    @staticmethod
+    def check_message(message, implement_procedures):
+        error_code, message_dict = HAPUtils.convert_string_to_dict(message)
+        if isinstance(error_code, int):
+            return (error_code, None)
+
+        try:
+            message_dict["result"]
+            message_dict["id"]
+            return message_dict
+        except KeyError:
+            pass
+
+        error_code = HAPUtils.check_procedure_is_implemented(               \
+                                  message_dict["method"], implement_procedures)
+        if isinstance(error_code, int):
+            try:
+                return (error_code, message_dict["id"]))
+            except KeyError:
+                return (error_code, None)
+
+        error_code = HAPUtils.check_argument_is_correct(message_dict["method"])
+        if isinstance(error_code, int):
+            try:
+                return (error_code, message_dict["id"]))
+            except KeyError:
+                return (error_code, None)
+
+        return message_dict
+
     @staticmethod
     def convert_string_to_dict(json_string):
         try:
