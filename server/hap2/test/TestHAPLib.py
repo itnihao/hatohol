@@ -20,6 +20,7 @@
 import unittest
 import multiprocessing
 import haplib
+from haplib import HAPUtils
 
 class TestHAPBaseSender(unittest.TestCase):
 
