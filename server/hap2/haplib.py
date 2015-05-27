@@ -42,6 +42,8 @@ SERVER_PROCEDURES = {"exchangeProfile": True,
                      "updateEvents": True,
                      "updateHostParent": True,
                      "updateArmInfo": True}
+ERROR_DICT = {-32700: "Parse error", -32600: "invalid Request",
+              -32601: "Method not found", -32602: "invalid params"}
 
 class MonitoringServerInfo:
     def __init__(self, ms_info_dict):
@@ -332,17 +334,3 @@ class HAPUtils:
     def get_current_hatohol_time():
         unix_time = float(time.mktime(datetime.now().utctimetuple()))
         return HAPUtils.translate_unix_time_to_hatohol_time(unix_time)
-
-    @staticmethod
-    def get_error_dict():
-        error_dict = {-32700: "Parse error", -32600: "invalid Request",
-                      -32601: "Method not found", -32602: "invalid params",
-                      -32603: "Internal error"}
-        for num in range(-32000, -32100):
-            error_dict[str(num)] = "Server error"
-    
-        return error_dict
-
-
-ERROR_DICT = HAPUtils.get_error_dict()
-
