@@ -47,6 +47,11 @@ class HAPZabbixMainPlugin(HAPBaseMainPlugin):
         self.sender = HAPZabbixSender(host, port, vhost, queue_name, user_name,
                                       user_password, main_response_queue,
                                       ms_info)
+        self.implement_procedures = ["exchengeProfile",
+                                     "fetchItems",
+                                     "fetchHistory",
+                                     "fetchTriggers",
+                                     "fetchEvents"]
 
     def hap_fetch_items(self, params, request_id):
         self.sender.send_response_to_queue("SUCCESS", request_id)
