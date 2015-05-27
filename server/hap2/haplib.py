@@ -344,6 +344,9 @@ class HAPUtils:
 
     @staticmethod
     def optimize_server_procedures(valid_procedures_dict, procedures):
+        for name in valid_procedures_dict:
+            valid_procedures_dict[name] = False
+
         for procedure in procedures:
             valid_procedures_dict[procedure] = True
 
