@@ -209,8 +209,11 @@ class HAPBaseReceiver:
 
 
 class HAPBaseMainPlugin:
-    def __init__(self, main_request_queue):
+    def __init__(self, host, port, vhost, queue_name, user_name,
+                 user_password, main_request_queue, ms_info=None):
         self.main_request_queue = main_request_queue
+        self.sender =  HAPBaseSender(host, port, vhost, queue_name, user_name,
+                                     user_password,main_request_queue, ms_info)
         self.procedures = {"exchangeProfile": self.hap_exchange_profile,
                            "fetchItems": self.hap_fetch_items,
                            "fetchHistory": self.hap_fetch_history,
