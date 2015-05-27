@@ -20,3 +20,30 @@
 import unittest
 import haplib
 
+class SenderForTest(haplib.HAPBaseSender):
+
+    def __init__(self, test_queue, change_get_response_and_check_id_flag=False):
+        self.sender_queue = test_queue
+        self.connector = ConnectorForTest(test_queue)
+        self.requested_ids = set()
+
+        if change_get_response_and_check_id_flag:
+            def get_response_and_check_id(self):
+                return
+
+
+class ConnectorForTest:
+    def __init__(self, test_queue):
+        self.test_queue = test_queue
+
+    def call(request):
+        self.test_queue.get()
+        self.test_queue.task_done()
+        self.test_queue.put({"id": 1, "result": None})
+        self.test_queue.task_done()
+
+    def reply(result):
+        return
+
+    def set_receiver(func):
+        return
