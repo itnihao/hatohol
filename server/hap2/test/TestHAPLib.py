@@ -135,6 +135,22 @@ class TestHaplib(unittest.TestCase):
         self.assertEquals(exact_json_dict, result)
 
 
+# The above tests is HAPBaseReceiver tests.
+# The following tests is HAPBaseMainPlugin tests.
+
+    def test_hap_exchange_profile(self):
+        test_main_plugin = MainPluginForTest(self.test_queue)
+        self.WheatherFunctionPasses(test_main_plugin.hap_exchange_profile,
+                                    ["exchangeProfile",], 1)
+
+    def test_get_request_loop(self):
+        test_main_plugin = MainPluginForTest(self.test_queue)
+        self.test_queue.put({"method":"exchangeProfile", "id":1, "params":{"procedures": ["exchangeProfile"], "name":"test_name"}})
+        try:
+            test_main_plugin.get_request_loop()
+        except Exception as exception:
+            self.assertEquals("finish", exception)
+
     def WheatherFunctionPasses(self, func, *args, **kwargs):
         try:
             func(*args, **kwargs)
@@ -171,7 +187,8 @@ class ConnectorForTest:
         self.test_queue.task_done()
 
     def reply(result):
-        return
+        # This raise is used in test_get_request_loop
+        raise Exception("finish")
 
     def set_receiver(func):
         return
