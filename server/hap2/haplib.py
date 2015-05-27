@@ -257,7 +257,7 @@ class HAPUtils:
     def convert_string_to_dict(json_string):
         try:
             json_dict = json.loads(json_string)
-        except Exception:
+        except ValueError:
             return -32700
         else:
             return json_dict
