@@ -178,8 +178,9 @@ class HAPBaseReceiver:
         self.connector.set_receiver(self.message_manager)
 
     def message_manager(self, ch, body):
-        valid_request = self.check_request(body)
-        if valid_request is None:
+        valid_request = HAPUtils.check_message(body)
+        if isinstance(valid_request, tuple):
+            self.main_request_queue.put(valid_request)
             return
 
         try:
@@ -235,6 +236,9 @@ class HAPBaseMainPlugin:
     def hap_fetch_events(self, params, request_id):
         pass
 
+    def hap_return_error(self, error_code, response_id):
+        self.sender.error_to_queue(error_code, response_id)
+
     def get_request_loop(self):
         while True:
             request = self.main_request_queue.get()
@@ -245,6 +249,9 @@ class HAPBaseMainPlugin:
                 #The following sentense is used in case of receive notification
                 # from Hatohol server. 
                 self.procedures[request["method"]](request["params"])
+            except ValueError as exception:
+                if exception == "tuple indices must be integers, not str":
+                    self.hap_return_error(request[0], request[1])
 
 
 class HAPUtils:
@@ -293,9 +300,9 @@ class HAPUtils:
         try:
             json_dict = json.loads(json_string)
         except ValueError:
-            return -32700
+            return (-32700, None)
         else:
-            return json_dict
+            return (None, json_dict)
 
     @staticmethod
     def check_method_is_implemented(method_name):
