@@ -225,7 +225,8 @@ class HAPBaseMainPlugin:
         self.implement_procedures = ["exchengeProfile"]
 
     def hap_exchange_profile(self, params, request_id):
-        HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params)
+        HAPUtils.optimize_server_procedures(SERVER_PROCEDURES, params["procedures"])
+        #ToDo Output to log that is connect finish message with params["name"]
         self.sender.exchange_profile(self.implement_procedures, request_id)
 
     def hap_fetch_items(self, params, request_id):
