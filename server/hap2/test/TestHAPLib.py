@@ -160,6 +160,7 @@ class SenderForTest(haplib.HAPBaseSender):
 
 
 class ConnectorForTest:
+
     def __init__(self, test_queue):
         self.test_queue = test_queue
 
@@ -183,3 +184,9 @@ class ReceiverForTest(haplib.HAPBaseReceiver):
         self.poller_queue = multiprocessing.JoinableQueue()
         self.main_requested_ids = set()
         self.poller_requested_ids = set()
+
+
+class MainPluginForTest(haplib.HAPBaseMainPlugin):
+
+    def __init__(self, test_queue):
+        self.sender = SenderForTest(test_queue, True)
