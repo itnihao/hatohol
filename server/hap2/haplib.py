@@ -242,7 +242,7 @@ class HAPBaseMainPlugin:
         pass
 
     def hap_return_error(self, error_code, response_id):
-        self.sender.error_to_queue(error_code, response_id)
+        self.sender.send_error_to_queue(error_code, response_id)
 
     def get_request_loop(self):
         while True:
