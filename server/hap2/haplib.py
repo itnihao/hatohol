@@ -246,6 +246,15 @@ class HAPBaseMainPlugin:
 
 class HAPUtils:
 
+    PROCEDURES_ARGS = {"exchangeProfile": {"procedures":list(), "name": str()},
+                       "fetchItems": {"hostIds":list(), "fetchIds": str()},
+                       "fetchHistory": {"hostId":str(),"itemId": str(),
+                                        "beginTime": str(), "entTime": str(),
+                                        "fetchIds": str()},
+                       "fetchTriggers": {"hostIds":list(), "fetchIds": str()},
+                       "fetchEvents": {"lastInfo":str(),"count":int(),
+                                       "direction": str(),"fetchIds": str()}}
+
     @staticmethod
     def check_message(message, implement_procedures):
         error_code, message_dict = HAPUtils.convert_string_to_dict(message)
@@ -295,13 +304,13 @@ class HAPUtils:
 
     @staticmethod
     def check_argument_is_correct(json_dict):
-        args = inspect.getargspec(json_dict["method"])
-        for argument in json_dict["params"]:
-            if argument in args:
-                result = "OK"
-
-        return -32602
-    # ToDo Think about algorithm. In case of param is object.
+        args_dict = HAPUtils.PROCEDURES_ARGS(json_dict["method"])
+        for arg_name, arg_value in json_dict["params"].itervalues():
+            try:
+                if type(arg_dict[arg_name]) != type(arg_value):
+                    return -32602
+            except KeyError:
+                return -32602
 
     @staticmethod
     def get_implement_procedures(class_name):
