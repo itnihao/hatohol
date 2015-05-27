@@ -86,6 +86,54 @@ class TestHAPBaseSender(unittest.TestCase):
         self.WheatherFunctionPasses(test_sender.update_arm_info,
                                     test_arm_info)
 
+# The above tests is HAPBaseSender tests.
+# The following tests is HAPBaseReceiver tests.
+
+    def test_message_manager_poller(self):
+        test_receiver = ReceiverForTest()
+        test_receiver.poller_queue.put(set[1])
+        test_json_string = '{"id":1}'
+        exact_json_dict = json.loads(test_json_string)
+        self.WheatherFunctionPasses(test_receiver.message_manager, None,
+                                    test_json_string)
+        result = test_receiver.poller_queue.get()
+
+        self.assertEquals(exact_json_dict, result)
+
+    def test_message_manager_main_response(self):
+        test_receiver = ReceiverForTest()
+        test_receiver.main_response_queue(set[1])
+        test_json_string = '{"id":1}'
+        exact_json_dict = json.loads(test_json_string)
+        self.WheatherFunctionPasses(test_receiver.message_manager, None,
+                                    test_json_string)
+        result = test_receiver.main_response_queue.get()
+
+        self.assertEquals(exact_json_dict, result)
+
+    def test_message_manager_main_request(self):
+        test_receiver = ReceiverForTest()
+        test_receiver.main_request_queue = multiprocessing.JoinableQueue()
+        test_json_string = '{"id":1}'
+        exact_json_dict = json.loads(test_json_string)
+        self.WheatherFunctionPasses(test_receiver.message_manager, None,
+                                    test_json_string)
+        result = test_receiver.main_request_queue.get()
+
+        self.assertEquals(exact_json_dict, result)
+
+    def test_message_manager_main_notification(self):
+        test_receiver = ReceiverForTest()
+        test_receiver.main_request_queue = multiprocessing.JoinableQueue()
+        test_json_string = '{"notification":"test"}'
+        exact_json_dict = json.loads(test_json_string)
+        self.WheatherFunctionPasses(test_receiver.message_manager, None,
+                                    test_json_string)
+        result = test_receiver.main_request_queue.get()
+
+        self.assertEquals(exact_json_dict, result)
+
+
     def WheatherFunctionPasses(self, func, *args, **kwargs):
         try:
             func(*args, **kwargs)
