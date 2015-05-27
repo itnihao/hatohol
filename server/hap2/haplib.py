@@ -325,15 +325,7 @@ class HAPUtils:
             except KeyError:
                 return -32602
 
-    @staticmethod
-    def get_implement_procedures(class_name):
-        procedures = ()
-        modules = dir(eval(class_name))
-        for module in modules:
-            if inspect.ismethod(eval(class_name + "." + module)) and eval("PluginProcedures." + module).im_func != eval(class_name + "." + module).im_func:
-                procedures = procedures + (module,)
-
-        return procedures
+        return
 
     @staticmethod
     def get_and_save_request_id(requested_ids):
