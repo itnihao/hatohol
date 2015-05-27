@@ -95,7 +95,7 @@ class TestHAPBaseSender(unittest.TestCase):
         if "exception" not in locals():
             exception = None
 
-        assertIsNone(exception)
+        self.assertIsNone(exception)
 
 
 class SenderForTest(haplib.HAPBaseSender):
